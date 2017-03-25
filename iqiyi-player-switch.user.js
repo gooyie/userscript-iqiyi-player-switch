@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         iqiyi player switch
 // @namespace    undefined
-// @version      0.0.0
+// @version      0.0.1
 // @description  iqiyi player switch between flash and html5
 // @author       gooyie
 //
 // @include      *://www.iqiyi.com/v_*
+// @include      *://www.iqiyi.com/dongman/*/*
 // @grant        GM_registerMenuCommand
 // @grant        GM_unregisterMenuCommand
 // @grant        GM_log
