@@ -17,3 +17,6 @@
 ### 已知问题
 * 爱奇艺h5播放器未支持弹幕。
 * 爱奇艺h5播放器还不是很稳定，可以会出现各种播放错误。
+
+### 仓库
+[GitHub](https://github.com/gooyie/userscript-iqiyi-player-switch)

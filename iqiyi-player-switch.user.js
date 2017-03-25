@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         iqiyi player switch
-// @namespace    undefined
-// @version      0.0.1
+// @namespace    https://greasyfork.org/users/111819-gooyie
+// @version      0.0.2
 // @description  iqiyi player switch between flash and html5
 // @author       gooyie
+// @license      MIT License
 //
 // @include      *://www.iqiyi.com/v_*
 // @include      *://www.iqiyi.com/dongman/*/*
