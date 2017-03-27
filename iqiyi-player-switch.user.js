@@ -1,13 +1,15 @@
 // ==UserScript==
 // @name         iqiyi player switch
 // @namespace    https://greasyfork.org/users/111819-gooyie
-// @version      0.0.2
+// @version      0.0.3
 // @description  iqiyi player switch between flash and html5
 // @author       gooyie
 // @license      MIT License
 //
 // @include      *://www.iqiyi.com/v_*
+// @include      *://www.iqiyi.com/w_*
 // @include      *://www.iqiyi.com/dongman/*/*
+// @include      *://www.iqiyi.com/yinyue/*/*
 // @grant        GM_registerMenuCommand
 // @grant        GM_unregisterMenuCommand
 // @grant        GM_log
