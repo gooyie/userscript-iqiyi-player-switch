@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         iqiyi player switch
 // @namespace    https://greasyfork.org/users/111819-gooyie
-// @version      0.1.0
+// @version      1.0.0
 // @description  iqiyi player switch between flash and html5
 // @author       gooyie
 // @license      MIT License
@@ -29,6 +29,11 @@
     const PLAYER_TYPE = {
         Html5VOD: "h5_VOD",
         FlashVOD: "flash_VOD"
+    };
+
+    const MENU_NAME = {
+        HTML5: 'HTML5播放器',
+        FLASH: 'Flash播放器'
     };
 
     class DocCookies {
@@ -63,12 +68,8 @@
     }
 
     class Switcher {
-        static switch() {
-            let currType = DocCookies.get('player_forcedType');
-            let toType = currType === PLAYER_TYPE.Html5VOD ? PLAYER_TYPE.FlashVOD : PLAYER_TYPE.Html5VOD;
-
+        static switchTo(toType) {
             GM_log('switching to %s ...', toType);
-            if (!confirm(`刷新页面切换到${toType}播放器？`)) return;
 
             if (toType === PLAYER_TYPE.Html5VOD && !this._canPlayback()) {
                 alert('╮(╯▽╰)╭ 你的浏览器播放不了html5视频~~~~');
@@ -90,7 +91,6 @@
                 v.canPlayType('video/mp4; codecs="avc1.640029, mp4a.40.2"')
             );
         }
-
     }
     // TODO: polyfill使不同的浏览器都能使用vms
     class Mocker {
@@ -140,9 +140,14 @@
         }
     }
 
+    function registerMenu() {
+        let currType = DocCookies.get('player_forcedType');
+        let [toType, name] = currType === PLAYER_TYPE.Html5VOD ? [PLAYER_TYPE.FlashVOD, MENU_NAME.FLASH] : [PLAYER_TYPE.Html5VOD, MENU_NAME.HTML5];
+        GM_registerMenuCommand(name, () => Switcher.switchTo(toType), null);
+    }
 
-    GM_registerMenuCommand('Switch Player', () => Switcher.switch(), null);
 
+    registerMenu();
     Mocker.mock();
 
 })();

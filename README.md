@@ -2,7 +2,7 @@
 爱奇艺flash播放器与html5播放器之间切换
 
 ### 使用姿势
-在播放页面点击**Tampermonkey**图标，然后在点击**Switch Player**。
+在播放页面点击`Tampermonkey`图标，然后再点击`HTML5播放器`或`Flash播放器`。
 
 ### 兼容性
 * 使用了es6语法，比较旧的浏览器不支持。
