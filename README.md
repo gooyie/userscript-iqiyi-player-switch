@@ -15,7 +15,7 @@
 ```
 
 ### 已知问题
-* 爱奇艺h5播放器还不是很稳定，可以会出现各种播放错误。
+* 网络不佳会出现『`播放出错了，请稍候片刻，刷新重试(P2P200)`』
 
 ### 仓库
 [GitHub](https://github.com/gooyie/userscript-iqiyi-player-switch)
