@@ -1,5 +1,5 @@
 ### 简述
-爱奇艺flash播放器与html5播放器随意切换，广告和谐与免vip看1080p、4k（仅限于html5播放器）。
+爱奇艺flash播放器与html5播放器随意切换，html5播放器广告和谐与免vip看1080p、4k。
 
 ### 使用
 在播放页面点击`Tampermonkey`图标，然后再点击`HTML5播放器`或`Flash播放器`。
