@@ -1,7 +1,9 @@
 // ==UserScript==
 // @name         iqiyi player switch
-// @namespace    https://greasyfork.org/users/111819-gooyie
-// @version      1.1.2
+// @namespace    https://github.com/gooyie/userscript-iqiyi-player-switch
+// @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
+// @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
+// @version      1.1.3
 // @description  iqiyi player switch between flash and html5
 // @author       gooyie
 // @license      MIT License
