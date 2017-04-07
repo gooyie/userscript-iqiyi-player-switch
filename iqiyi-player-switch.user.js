@@ -4,7 +4,7 @@
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js
-// @version      1.1.4
+// @version      1.2.0
 // @description  iqiyi player switch between flash and html5
 // @author       gooyie
 // @license      MIT License
@@ -107,7 +107,7 @@
 
         }
 
-        static _isFactoryCall(args) {
+        static _isFactoryCall(args) { // module.exports, module, module.exports, require
             return args.length === 4 && 'object' === typeof args[1] && args[1].hasOwnProperty('exports');
         }
 
@@ -119,7 +119,7 @@
             return exports.hasOwnProperty('fn') && exports.fn.hasOwnProperty('jquery');
         }
 
-        static hookJquery(cb = () => {}) { // module.exports, module, module.exports, require
+        static hookJquery(cb = () => {}) {
             this.hookFactoryCall((...args) => {if (this._isJqueryFactoryCall(args[1].exports)) cb(...args);});
         }
 
@@ -203,6 +203,10 @@
             return json;
         }
 
+        static fakePassportCookie() {
+            DocCookies.set('P00001', 'faked_passport', {domain: '.iqiyi.com'});
+        }
+
     }
 
     class Mocker {
@@ -257,7 +261,13 @@
             return url === CHECK_VIP_URL;
         }
 
+        static _isLogin() {
+            return !!DocCookies.get('P00001');
+        }
+
         static mockVip() {
+            if (!this._isLogin()) Faker.fakePassportCookie();
+
             Hooker.hookHttpJsonp((options) => {
                 let url = options.url;
                 GM_log('[http jsonp]: %s', url);
