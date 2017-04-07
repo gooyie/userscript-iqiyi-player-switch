@@ -3,7 +3,8 @@
 // @namespace    https://github.com/gooyie/userscript-iqiyi-player-switch
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
-// @version      1.1.3
+// @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js
+// @version      1.1.4
 // @description  iqiyi player switch between flash and html5
 // @author       gooyie
 // @license      MIT License

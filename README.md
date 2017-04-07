@@ -1,6 +1,10 @@
 ### 简述
 爱奇艺flash播放器与html5播放器随意切换，html5播放器广告和谐与免vip看1080p、4k。
 
+### 安装
+* [GitHub](https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js)
+* [GreasyFork](https://greasyfork.org/zh-CN/scripts/28356-iqiyi-player-switch)
+
 ### 使用
 在播放页面点击`Tampermonkey`图标，然后再点击`HTML5播放器`或`Flash播放器`。
 
@@ -12,10 +16,7 @@
 广告已和谐（仅限于html5播放器），无需广告拦截扩展。
 
 ### 已知问题
-* 网络不佳会出现『`播放出错了，请稍候片刻，刷新重试(P2P200)`』
-
-### 仓库
-* [GitHub](https://github.com/gooyie/userscript-iqiyi-player-switch)
+* html5播放器在网络不佳会出现『`播放出错了，请稍候片刻，刷新重试(P2P200)`』
 
 ### 依赖
 * [blueimp/JavaScript-MD5](https://github.com/blueimp/JavaScript-MD5)
