@@ -4,15 +4,12 @@
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js
-// @version      1.2.0
+// @version      1.3.0
 // @description  iqiyi player switch between flash and html5
 // @author       gooyie
 // @license      MIT License
 //
-// @include      *://www.iqiyi.com/v_*
-// @include      *://www.iqiyi.com/w_*
-// @include      *://www.iqiyi.com/dongman/*/*
-// @include      *://www.iqiyi.com/yinyue/*/*
+// @include      *://*.iqiyi.com/*
 // @grant        GM_registerMenuCommand
 // @grant        GM_unregisterMenuCommand
 // @grant        GM_log
@@ -295,7 +292,7 @@
             let date = new Date();
             date.setFullYear(date.getFullYear() + 1);
 
-            DocCookies.set('player_forcedType', toType, {expires: date});
+            DocCookies.set('player_forcedType', toType, {domian: '.iqiyi.com', expires: date});
             document.location.reload();
         }
 
