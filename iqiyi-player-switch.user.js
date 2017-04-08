@@ -4,7 +4,7 @@
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js
-// @version      1.3.0
+// @version      1.3.1
 // @description  iqiyi player switch between flash and html5
 // @author       gooyie
 // @license      MIT License
@@ -134,7 +134,7 @@
                     let isHijacked = cb(url, options);
                     if (isHijacked) return;
 
-                    ajax(url, options);
+                    return ajax(url, options);
                 };
             });
         }
@@ -156,7 +156,7 @@
                 exports.jsonp = function(options) {
                     let isHijacked = cb(options);
                     if (isHijacked) return;
-                    jsonp(options);
+                    return jsonp(options);
                 };
             });
         }
@@ -292,7 +292,7 @@
             let date = new Date();
             date.setFullYear(date.getFullYear() + 1);
 
-            DocCookies.set('player_forcedType', toType, {domian: '.iqiyi.com', expires: date});
+            DocCookies.set('player_forcedType', toType, {domain: '.iqiyi.com', expires: date});
             document.location.reload();
         }
 
