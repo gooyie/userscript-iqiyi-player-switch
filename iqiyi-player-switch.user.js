@@ -11,7 +11,6 @@
 //
 // @include      *://*.iqiyi.com/*
 // @grant        GM_registerMenuCommand
-// @grant        GM_unregisterMenuCommand
 // @grant        GM_log
 // @require      https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.7.0/js/md5.min.js
 // @run-at       document-start
@@ -22,15 +21,15 @@
     'use strict';
 
     const PLAYER_TYPE = {
-        Html5VOD: "h5_VOD",
-        FlashVOD: "flash_VOD"
+        Html5VOD: 'h5_VOD',
+        FlashVOD: 'flash_VOD'
     };
 
     class DocCookies {
         static get(key) {
             let value;
             if (new RegExp('^[^\\x00-\\x20\\x7f\\(\\)<>@,;:\\\\\\"\\[\\]\\?=\\{\\}\\/\\u0080-\\uffff]+$').test(key)) {
-                let re = new RegExp("(^| )" + key + "=([^;]*)(;|$)");
+                let re = new RegExp('(^| )' + key + '=([^;]*)(;|$)');
                 let rs = re.exec(document.cookie);
                 value = rs ? rs[2] : '';
             }
@@ -39,7 +38,7 @@
 
         static set(k, v, o={}) {
             let n = o.expires;
-            if ("number" == typeof o.expires) {
+            if ('number' == typeof o.expires) {
                 n = new Date();
                 n.setTime(n.getTime() + o.expires);
             }
@@ -89,7 +88,7 @@
 
     class Hooker {
 
-        static hookCall(cb = () => {}) {
+        static hookCall(cb = ()=>{}) {
 
             const call = Function.prototype.call;
             Function.prototype.call = function(...args) {
@@ -108,7 +107,7 @@
             return args.length === 4 && 'object' === typeof args[1] && args[1].hasOwnProperty('exports');
         }
 
-        static hookFactoryCall(cb = () => {}) {
+        static hookFactoryCall(cb = ()=>{}) {
             this.hookCall((...args) => {if (this._isFactoryCall(args)) cb(...args);});
         }
 
@@ -116,11 +115,11 @@
             return exports.hasOwnProperty('fn') && exports.fn.hasOwnProperty('jquery');
         }
 
-        static hookJquery(cb = () => {}) {
+        static hookJquery(cb = ()=>{}) {
             this.hookFactoryCall((...args) => {if (this._isJqueryFactoryCall(args[1].exports)) cb(...args);});
         }
 
-        static hookJqueryAjax(cb = () => {}) {
+        static hookJqueryAjax(cb = ()=>{}) {
             this.hookJquery((...args) => {
                 let exports = args[1].exports;
 
@@ -143,11 +142,11 @@
             return exports.hasOwnProperty('jsonp') && exports.hasOwnProperty('ajax');
         }
 
-        static hookHttp(cb = () => {}) {
+        static hookHttp(cb = ()=>{}) {
             this.hookFactoryCall((...args) => {if (this._isHttpFactoryCall(args[1].exports)) cb(...args);});
         }
 
-        static hookHttpJsonp(cb = () => {}) {
+        static hookHttpJsonp(cb = ()=>{}) {
             this.hookHttp((...args) => {
                 let exports = args[1].exports;
 
@@ -182,12 +181,12 @@
 
         static _calcSign(authcookie) {
             const RESPONSE_KEY = '-0J1d9d^ESd)9jSsja';
-            return md5(authcookie.substring(5, 39).split("").reverse().join("") + "<1<" + RESPONSE_KEY);
+            return md5(authcookie.substring(5, 39).split('').reverse().join('') + '<1<' + RESPONSE_KEY);
         }
 
         static fakeVipRes(authcookie) {
             let json = {
-                code: "A00000",
+                code: 'A00000',
                 data: {
                     sign: this._calcSign(authcookie)
                 }
