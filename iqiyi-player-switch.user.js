@@ -139,7 +139,7 @@
             });
         }
 
-        static _isHttpFactoryCall(exports) {
+        static _isHttpFactoryCall(exports = {}) {
             return exports.hasOwnProperty('jsonp') && exports.hasOwnProperty('ajax');
         }
 
