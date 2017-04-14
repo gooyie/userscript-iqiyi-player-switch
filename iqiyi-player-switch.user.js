@@ -170,7 +170,7 @@
             Object.defineProperty(navigator, 'platform', {get: () => PLAFORM_MAC});
         }
 
-        static fakeSafary() {
+        static fakeSafari() {
             const UA_SAFARY = 'safari';
             Object.defineProperty(navigator, 'userAgent', {get: () => UA_SAFARY});
         }
@@ -224,7 +224,7 @@
 
         static mockToUseM3u8() {
             Faker.fakeMacPlatform();
-            Faker.fakeSafary();
+            Faker.fakeSafari();
         }
 
         static mockForBestDefintion() {
