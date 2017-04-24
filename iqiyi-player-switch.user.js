@@ -11,6 +11,7 @@
 //
 // @include      *://*.iqiyi.com/*
 // @grant        GM_registerMenuCommand
+// @grant        GM_info
 // @grant        GM_log
 // @require      https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.7.0/js/md5.min.js
 // @run-at       document-start
@@ -25,7 +26,20 @@
         FlashVOD: 'flash_VOD'
     };
 
+    class Logger {
+
+        static get tag() {
+            return `[${GM_info.script.name}]: `;
+        }
+
+        static log(msg) {
+            GM_log(this.tag + msg);
+        }
+
+    }
+
     class Cookies {
+
         static get(key) {
             let value;
             if (new RegExp('^[^\\x00-\\x20\\x7f\\(\\)<>@,;:\\\\\\"\\[\\]\\?=\\{\\}\\/\\u0080-\\uffff]+$').test(key)) {
@@ -242,11 +256,11 @@
 
         static mockAd() {
             Hooker.hookJqueryAjax((url, options) => {
-                GM_log('[jquery ajax]: %s', url);
 
                 if (this._isAdReq(url)) {
                     let res = Faker.fakeAdRes();
                     options.complete({responseJSON: res}, 'success');
+                    Logger.log(`mocked ad request ${url}`);
                     return true;
                 }
             });
@@ -266,11 +280,11 @@
 
             Hooker.hookHttpJsonp((options) => {
                 let url = options.url;
-                GM_log('[http jsonp]: %s', url);
 
                 if (this._isCheckVipReq(url)) {
                     let res = Faker.fakeVipRes(options.params.authcookie);
                     options.success(res);
+                    Logger.log(`mocked check vip request ${url}`);
                     return true;
                 }
             });
@@ -281,7 +295,7 @@
     class Switcher {
 
         static switchTo(toType) {
-            GM_log('switching to %s ...', toType);
+            Logger.log(`switching to ${toType} ...`);
 
             if (toType === PLAYER_TYPE.Html5VOD && !Detector.isSupportHtml5()) {
                 alert('╮(╯▽╰)╭ 你的浏览器播放不了html5视频~~~~');
@@ -306,6 +320,7 @@
         let currType = Cookies.get('player_forcedType');
         let [toType, name] = currType === PLAYER_TYPE.Html5VOD ? [PLAYER_TYPE.FlashVOD, MENU_NAME.FLASH] : [PLAYER_TYPE.Html5VOD, MENU_NAME.HTML5];
         GM_registerMenuCommand(name, () => Switcher.switchTo(toType), null);
+        Logger.log(`registered menu.`);
     }
 
 
