@@ -11,6 +11,8 @@
 //
 // @include      *://*.iqiyi.com/*
 // @grant        GM_registerMenuCommand
+// @grant        GM_getValue
+// @grant        GM_setValue
 // @grant        GM_info
 // @grant        GM_log
 // @require      https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.7.0/js/md5.min.js
@@ -68,6 +70,7 @@
             o.expires = new Date(0);
             this.set(k, '', o);
         }
+
     }
 
     class Detector {
@@ -222,12 +225,21 @@
     class Mocker {
 
         static mock() {
-            let currType = Cookies.get('player_forcedType');
+            let currType = GM_getValue('player_forcedType', PLAYER_TYPE.Html5VOD);
             if (currType !== PLAYER_TYPE.Html5VOD) return;
+            if (!Detector.isSupportHtml5()) return alert('╮(╯▽╰)╭ 你的浏览器播放不了html5视频~~~~');
 
+            this.forceHtml5();
             this.mockForBestDefintion();
             this.mockAd();
             this.mockVip();
+
+            window.addEventListener('unload', event => this.destroy());
+        }
+
+        static forceHtml5() {
+            Logger.log(`setting player_forcedType cookie as ${PLAYER_TYPE.Html5VOD}`);
+            Cookies.set('player_forcedType', PLAYER_TYPE.Html5VOD, {domain: '.iqiyi.com'});
         }
 
         static mockToUseVms() {
@@ -290,6 +302,12 @@
             });
         }
 
+        static destroy() {
+            Cookies.remove('player_forcedType', {domain: '.iqiyi.com'});
+            if (Cookies.get('P00001') === 'faked_passport') Cookies.remove('P00001', {domain: '.iqiyi.com'});
+            Logger.log(`removed cookies.`);
+        }
+
     }
 
     class Switcher {
@@ -297,15 +315,7 @@
         static switchTo(toType) {
             Logger.log(`switching to ${toType} ...`);
 
-            if (toType === PLAYER_TYPE.Html5VOD && !Detector.isSupportHtml5()) {
-                alert('╮(╯▽╰)╭ 你的浏览器播放不了html5视频~~~~');
-                return;
-            }
-            // cookie 有效时间为一年
-            let date = new Date();
-            date.setFullYear(date.getFullYear() + 1);
-
-            Cookies.set('player_forcedType', toType, {domain: '.iqiyi.com', expires: date});
+            GM_setValue('player_forcedType', toType);
             document.location.reload();
         }
 
@@ -317,7 +327,7 @@
             FLASH: 'Flash播放器'
         };
 
-        let currType = Cookies.get('player_forcedType');
+        let currType = GM_getValue('player_forcedType', PLAYER_TYPE.Html5VOD); // 默认为Html5播放器，免去切换。
         let [toType, name] = currType === PLAYER_TYPE.Html5VOD ? [PLAYER_TYPE.FlashVOD, MENU_NAME.FLASH] : [PLAYER_TYPE.Html5VOD, MENU_NAME.HTML5];
         GM_registerMenuCommand(name, () => Switcher.switchTo(toType), null);
         Logger.log(`registered menu.`);
