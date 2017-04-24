@@ -25,7 +25,7 @@
         FlashVOD: 'flash_VOD'
     };
 
-    class DocCookies {
+    class Cookies {
         static get(key) {
             let value;
             if (new RegExp('^[^\\x00-\\x20\\x7f\\(\\)<>@,;:\\\\\\"\\[\\]\\?=\\{\\}\\/\\u0080-\\uffff]+$').test(key)) {
@@ -200,7 +200,7 @@
         }
 
         static fakePassportCookie() {
-            DocCookies.set('P00001', 'faked_passport', {domain: '.iqiyi.com'});
+            Cookies.set('P00001', 'faked_passport', {domain: '.iqiyi.com'});
         }
 
     }
@@ -208,7 +208,7 @@
     class Mocker {
 
         static mock() {
-            let currType = DocCookies.get('player_forcedType');
+            let currType = Cookies.get('player_forcedType');
             if (currType !== PLAYER_TYPE.Html5VOD) return;
 
             this.mockForBestDefintion();
@@ -258,7 +258,7 @@
         }
 
         static _isLogin() {
-            return !!DocCookies.get('P00001');
+            return !!Cookies.get('P00001');
         }
 
         static mockVip() {
@@ -291,7 +291,7 @@
             let date = new Date();
             date.setFullYear(date.getFullYear() + 1);
 
-            DocCookies.set('player_forcedType', toType, {domain: '.iqiyi.com', expires: date});
+            Cookies.set('player_forcedType', toType, {domain: '.iqiyi.com', expires: date});
             document.location.reload();
         }
 
@@ -303,7 +303,7 @@
             FLASH: 'Flash播放器'
         };
 
-        let currType = DocCookies.get('player_forcedType');
+        let currType = Cookies.get('player_forcedType');
         let [toType, name] = currType === PLAYER_TYPE.Html5VOD ? [PLAYER_TYPE.FlashVOD, MENU_NAME.FLASH] : [PLAYER_TYPE.Html5VOD, MENU_NAME.HTML5];
         GM_registerMenuCommand(name, () => Switcher.switchTo(toType), null);
     }
