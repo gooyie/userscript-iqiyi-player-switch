@@ -10,11 +10,12 @@
 
 ## 兼容性
 * 使用了es6语法，比较旧的浏览器和`Tampermonkey`不支持。
-* html5播放器清晰度（以最新版本的浏览器进行测试）
-  * Chrome浏览器已实现了播放f4v用到的新api，直接播放有720p及以上清晰度的f4v。
-  * Firefox和Edge浏览器因一些新api未实现，所以只能播放最高清晰度为高清的mp4或m3u8。
-  * 其它浏览器未测试。
-* 较低版本的Chrome浏览器对新的api支持不是很好，html5播放器不能正常播放。
+* html5播放器清晰度
+  * html5 播放器播放 `f4v` 依赖于 `fetch + ReadableStream` 与   `WebRTC`，能否播放或正常播放取决于浏览器。
+  * `Chrome/57.0.2987.133+` 可以很好的播放`f4v`。
+  * `Firefox/53.0` 仍未实现 `ReadableStream` ，通过使用 `Polyfill` 后也可以很好的播放 `f4v`。
+  * `Edge` 使用 `WebRTC adapter` 后也可以播放 `f4v`。但是 `Build 15048` 之前的 `ReadableStream` 有   [bug](https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/8196907/)，会出现播放中断  。
+  * 不支持播放 `f4v` 的浏览器， 则会自动播放最高清晰度为高清的 `mp4` 或 `m3u8` 。
 
 ## 视频广告
 广告已和谐（仅限于html5播放器），无需广告拦截扩展。
@@ -24,3 +25,6 @@
 
 ## 用到的库
 * [blueimp/JavaScript-MD5](https://github.com/blueimp/JavaScript-MD5)
+* [jonnyreeves/fetch-readablestream](https://github.com/jonnyreeves/fetch-readablestream)
+* [creatorrr/web-streams-polyfill](https://github.com/creatorrr/web-streams-polyfill)
+* [webrtc/adapter](https://github.com/webrtc/adapter)
