@@ -18,6 +18,7 @@
 // @grant        unsafeWindow
 // @require      https://greasyfork.org/scripts/29319-web-streams-polyfill/code/web-streams-polyfill.js?version=191261
 // @require      https://greasyfork.org/scripts/29306-fetch-readablestream/code/fetch-readablestream.js?version=191832
+// @require      https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.3.4/adapter.min.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.7.0/js/md5.min.js
 // @run-at       document-start
 
@@ -106,6 +107,10 @@
 
         static isFirefox() {
             return /firefox/i.test(navigator.userAgent);
+        }
+
+        static isEdge() {
+            return /edge/i.test(navigator.userAgent);
         }
 
     }
@@ -276,6 +281,11 @@
                         return fetch(url, opts);
                     }
                 };
+            } else if (Detector.isEdge()) {
+                // export to the global window object
+                unsafeWindow.RTCIceCandidate = window.RTCIceCandidate;
+                unsafeWindow.RTCPeerConnection = window.RTCPeerConnection;
+                unsafeWindow.RTCSessionDescription = window.RTCSessionDescription;
             }
             if (Detector.isSupportVms()) {
                 this.mockToUseVms(); // vms, 1080p or higher
