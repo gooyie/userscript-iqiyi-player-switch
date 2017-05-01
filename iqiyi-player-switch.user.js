@@ -4,7 +4,7 @@
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js
-// @version      1.5.0
+// @version      1.5.1
 // @description  iqiyi player switch between flash and html5
 // @author       gooyie
 // @license      MIT License
@@ -306,7 +306,7 @@
             Hooker.hookJqueryAjax((url, options) => {
                 if (this._isAdReq(url)) {
                     let res = Faker.fakeAdRes();
-                    options.complete({responseJSON: res}, 'success');
+                    (options.complete || options.success)({responseJSON: res}, 'success');
                     Logger.log(`mocked ad request ${url}`);
                     return true;
                 }
