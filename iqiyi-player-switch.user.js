@@ -15,6 +15,7 @@
 // @grant        GM_setValue
 // @grant        GM_info
 // @grant        GM_log
+// @grant        unsafeWindow
 // @require      https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.7.0/js/md5.min.js
 // @run-at       document-start
 
@@ -183,17 +184,17 @@
 
         static fakeMacPlatform() {
             const PLAFORM_MAC = 'mac';
-            Object.defineProperty(navigator, 'platform', {get: () => PLAFORM_MAC});
+            Object.defineProperty(unsafeWindow.navigator, 'platform', {get: () => PLAFORM_MAC});
         }
 
         static fakeSafari() {
             const UA_SAFARY = 'safari';
-            Object.defineProperty(navigator, 'userAgent', {get: () => UA_SAFARY});
+            Object.defineProperty(unsafeWindow.navigator, 'userAgent', {get: () => UA_SAFARY});
         }
 
         static fakeChrome() {
             const UA_CHROME = 'chrome';
-            Object.defineProperty(navigator, 'userAgent', {get: () => UA_CHROME});
+            Object.defineProperty(unsafeWindow.navigator, 'userAgent', {get: () => UA_CHROME});
         }
 
         static _calcSign(authcookie) {
