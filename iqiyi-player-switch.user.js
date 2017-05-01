@@ -16,6 +16,8 @@
 // @grant        GM_info
 // @grant        GM_log
 // @grant        unsafeWindow
+// @require      https://greasyfork.org/scripts/29319-web-streams-polyfill/code/web-streams-polyfill.js?version=191261
+// @require      https://greasyfork.org/scripts/29306-fetch-readablestream/code/fetch-readablestream.js?version=191832
 // @require      https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.7.0/js/md5.min.js
 // @run-at       document-start
 
@@ -100,6 +102,10 @@
                 v.canPlayType('application/x-mpegurl') &&
                 v.canPlayType('application/vnd.apple.mpegurl')
             );
+        }
+
+        static isFirefox() {
+            return /firefox/i.test(navigator.userAgent);
         }
 
     }
@@ -253,7 +259,24 @@
             Faker.fakeSafari();
         }
 
+        static _isVideoReq(url) {
+            return /^https?:\/\/(?:\d+.?){4}\/videos\/v.*$/.test(url);
+        }
+
         static mockForBestDefintion() {
+            // apply shims
+            if (Detector.isFirefox()) {
+                const fetch = unsafeWindow.fetch.bind(unsafeWindow);
+
+                unsafeWindow.fetch = (url, opts) => {
+                    if (this._isVideoReq(url)) {
+                        Logger.log(`fetching stream ${url}`);
+                        return fetchStream(url, opts); // xhr with moz-chunked-arraybuffer
+                    } else {
+                        return fetch(url, opts);
+                    }
+                };
+            }
             if (Detector.isSupportVms()) {
                 this.mockToUseVms(); // vms, 1080p or higher
             } else if (Detector.isSupportM3u8()) {
