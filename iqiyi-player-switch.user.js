@@ -21,7 +21,6 @@
 // @require      https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.3.4/adapter.min.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.7.0/js/md5.min.js
 // @run-at       document-start
-
 // ==/UserScript==
 
 (function() {
@@ -230,6 +229,7 @@
 
         static fakePassportCookie() {
             Cookies.set('P00001', 'faked_passport', {domain: '.iqiyi.com'});
+            Logger.log(`faked passport cookie`);
         }
 
     }
@@ -287,12 +287,14 @@
                 unsafeWindow.RTCPeerConnection = window.RTCPeerConnection;
                 unsafeWindow.RTCSessionDescription = window.RTCSessionDescription;
             }
+            // auto fall-back
             if (Detector.isSupportVms()) {
                 this.mockToUseVms(); // vms, 1080p or higher
             } else if (Detector.isSupportM3u8()) {
                 this.mockToUseM3u8(); // tmts m3u8
+            } else {
+                // by default, tmts mp4 ...
             }
-            // tmts mp4 ...
         }
 
         static _isAdReq(url) {
@@ -302,7 +304,6 @@
 
         static mockAd() {
             Hooker.hookJqueryAjax((url, options) => {
-
                 if (this._isAdReq(url)) {
                     let res = Faker.fakeAdRes();
                     options.complete({responseJSON: res}, 'success');
