@@ -4,7 +4,7 @@
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js
-// @version      1.5.1
+// @version      1.5.2
 // @description  iqiyi player switch between flash and html5
 // @author       gooyie
 // @license      MIT License
@@ -102,6 +102,10 @@
                 v.canPlayType('application/x-mpegurl') &&
                 v.canPlayType('application/vnd.apple.mpegurl')
             );
+        }
+
+        static isChrome() {
+            return /chrome/i.test(navigator.userAgent);
         }
 
         static isFirefox() {
@@ -238,13 +242,20 @@
 
         static mock() {
             let currType = GM_getValue('player_forcedType', PLAYER_TYPE.Html5VOD);
-            if (currType !== PLAYER_TYPE.Html5VOD) return;
-            if (!Detector.isSupportHtml5()) return alert('╮(╯▽╰)╭ 你的浏览器播放不了html5视频~~~~');
 
-            this.forceHtml5();
-            this.mockForBestDefintion();
-            this.mockAd();
-            this.mockVip();
+            if (currType === PLAYER_TYPE.Html5VOD) {
+                if (!Detector.isSupportHtml5()) {
+                    alert('╮(╯▽╰)╭ 你的浏览器播放不了html5视频~~~~');
+                    return;
+                }
+
+                this.forceHtml5();
+                this.mockForBestDefintion();
+                this.mockAd();
+                this.mockVip();
+            } else {
+                this.forceFlash();
+            }
 
             window.addEventListener('unload', event => this.destroy());
         }
@@ -254,8 +265,12 @@
             Cookies.set('player_forcedType', PLAYER_TYPE.Html5VOD, {domain: '.iqiyi.com'});
         }
 
+        static forceFlash() {
+            Logger.log(`setting player_forcedType cookie as ${PLAYER_TYPE.FlashVOD}`);
+            Cookies.set('player_forcedType', PLAYER_TYPE.FlashVOD, {domain: '.iqiyi.com'});
+        }
+
         static mockToUseVms() {
-            Faker.fakeMacPlatform();
             Faker.fakeChrome();
         }
 
@@ -289,7 +304,7 @@
             }
             // auto fall-back
             if (Detector.isSupportVms()) {
-                this.mockToUseVms(); // vms, 1080p or higher
+                if (!Detector.isChrome()) this.mockToUseVms(); // vms, 1080p or higher
             } else if (Detector.isSupportM3u8()) {
                 this.mockToUseM3u8(); // tmts m3u8
             } else {
