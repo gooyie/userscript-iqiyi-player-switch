@@ -4,7 +4,7 @@
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js
-// @version      1.5.2
+// @version      1.6.0
 // @description  iqiyi player switch between flash and html5
 // @author       gooyie
 // @license      MIT License
@@ -192,6 +192,14 @@
             });
         }
 
+        static _isLogoFactoryCall(exports = {}) {
+            return 'function' === typeof exports && exports.prototype.hasOwnProperty('showLogo');
+        }
+
+        static hookLogo(cb = ()=>{}) {
+            this.hookFactoryCall((...args) => {if (this._isLogoFactoryCall(args[1].exports)) cb(args[1].exports);});
+        }
+
     }
 
     class Faker {
@@ -253,6 +261,7 @@
                 this.mockForBestDefintion();
                 this.mockAd();
                 this.mockVip();
+                this.mockLogo();
             } else {
                 this.forceFlash();
             }
@@ -350,6 +359,10 @@
                     return true;
                 }
             });
+        }
+
+        static mockLogo() {
+            Hooker.hookLogo(exports => exports.prototype.showLogo = ()=>{});
         }
 
         static destroy() {
