@@ -2,14 +2,14 @@
 爱奇艺flash播放器与html5播放器随意切换，html5播放器广告和谐与免vip看1080p、4k。
 
 ## 安装
-* [GitHub](https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js)
-* [GreasyFork](https://greasyfork.org/zh-CN/scripts/28356-iqiyi-player-switch)
+* [GitHub](https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js)（源码）
+* [GreasyFork](https://greasyfork.org/zh-CN/scripts/28356-iqiyi-player-switch)（已转码）
 
 ## 使用
 在播放页面点击`Tampermonkey`图标，然后再点击`HTML5播放器`或`Flash播放器`。
 
 ## 兼容性
-* 使用了es6语法，比较旧的浏览器和`Tampermonkey`不支持。
+* ~~使用了es6语法，比较旧的浏览器和`Tampermonkey`不支持。~~
 * html5播放器清晰度
   * html5 播放器播放 `f4v` 依赖于 `fetch + ReadableStream` 与   `WebRTC`，能否播放或正常播放取决于浏览器。
   * `Chrome/57.0.2987.133+` 可以很好的播放`f4v`。
