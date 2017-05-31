@@ -4,6 +4,8 @@
   "description": "iqiyi player switch between flash and html5",
   "main": "iqiyi-player-switch.user.js",
   "scripts": {
+    "lint": "eslint iqiyi-player-switch.user.js",
+    "prebuild": "npm run lint",
     "build": "babel iqiyi-player-switch.user.js -o iqiyi-player-switch.dist.user.js"
   },
   "repository": {
@@ -25,6 +27,7 @@
   "homepage": "https://github.com/gooyie/userscript-iqiyi-player-switch#readme",
   "devDependencies": {
     "babel-cli": "^6.24.1",
-    "babel-preset-es2015": "^6.24.1"
+    "babel-preset-es2015": "^6.24.1",
+    "eslint": "^3.19.0"
   }
 }

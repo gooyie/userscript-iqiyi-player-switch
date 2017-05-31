@@ -47,7 +47,7 @@
 
         static get(key) {
             let value;
-            if (new RegExp('^[^\\x00-\\x20\\x7f\\(\\)<>@,;:\\\\\\"\\[\\]\\?=\\{\\}\\/\\u0080-\\uffff]+$').test(key)) {
+            if (new RegExp('^[^\\x00-\\x20\\x7f\\(\\)<>@,;:\\\\\\"\\[\\]\\?=\\{\\}\\/\\u0080-\\uffff]+$').test(key)) { // eslint-disable-line no-control-regex
                 let re = new RegExp('(^| )' + key + '=([^;]*)(;|$)');
                 let rs = re.exec(document.cookie);
                 value = rs ? rs[2] : '';
