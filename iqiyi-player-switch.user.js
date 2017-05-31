@@ -1,21 +1,25 @@
 // ==UserScript==
-// @name         iqiyi player switch
+// @name         iqiyi-player-switch
 // @namespace    https://github.com/gooyie/userscript-iqiyi-player-switch
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js
-// @version      1.7.0
+// @version      1.8.0
 // @description  iqiyi player switch between flash and html5
 // @author       gooyie
 // @license      MIT License
 //
 // @include      *://*.iqiyi.com/*
+// @include      *://v.baidu.com/*
 // @grant        GM_registerMenuCommand
+// @grant        GM_xmlhttpRequest
+// @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_info
 // @grant        GM_log
 // @grant        unsafeWindow
+// @connect      qiyi.com
 // @require      https://greasyfork.org/scripts/29319-web-streams-polyfill/code/web-streams-polyfill.js?version=191261
 // @require      https://greasyfork.org/scripts/29306-fetch-readablestream/code/fetch-readablestream.js?version=191832
 // @require      https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.3.4/adapter.min.js
@@ -116,6 +120,10 @@
             return /edge/i.test(navigator.userAgent);
         }
 
+        static isInnerFrame() {
+            return window.top !== window.self;
+        }
+
     }
 
     class Hooker {
@@ -200,6 +208,40 @@
             this.hookFactoryCall((...args) => {if (this._isLogoFactoryCall(args[1].exports)) cb(args[1].exports);});
         }
 
+        static _isFullScreenFactoryCall(exports = {}) {
+            return exports.__proto__ && exports.__proto__.hasOwnProperty('isFullScreen');
+        }
+
+        static hookFullScreen(cb = ()=>{}) {
+            this.hookFactoryCall((...args) => {if (this._isFullScreenFactoryCall(args[1].exports)) cb(args[1].exports);});
+        }
+
+        static _isWebFullScreenFactoryCall(exports = {}) {
+            return exports.__proto__ && exports.__proto__.hasOwnProperty('isWebFullScreen');
+        }
+
+        static hookWebFullScreen(cb = ()=>{}) {
+            this.hookFactoryCall((...args) => {if (this._isWebFullScreenFactoryCall(args[1].exports)) cb(args[1].exports);});
+        }
+
+        static _isPluginControlsFactoryCall(exports = {}) {
+            return 'function' === typeof exports && exports.prototype.hasOwnProperty('initFullScreen');
+        }
+
+        static hookPluginControls(cb = ()=>{}) {
+            this.hookFactoryCall((...args) => {if (this._isPluginControlsFactoryCall(args[1].exports)) cb(args[1].exports);});
+        }
+
+        static _isCoreFactoryCall(exports = {}) {
+            return 'function' === typeof exports &&
+                    exports.prototype.hasOwnProperty('getdefaultvds') &&
+                    exports.prototype.hasOwnProperty('getMovieInfo');
+        }
+
+        static hookCore(cb = ()=>{}) {
+            this.hookFactoryCall((...args) => {if (this._isCoreFactoryCall(args[1].exports)) cb(args[1].exports);});
+        }
+
     }
 
     class Faker {
@@ -249,34 +291,10 @@
     class Mocker {
 
         static mock() {
-            let currType = GM_getValue('player_forcedType', PLAYER_TYPE.Html5VOD);
-
-            if (currType === PLAYER_TYPE.Html5VOD) {
-                if (!Detector.isSupportHtml5()) {
-                    alert('╮(╯▽╰)╭ 你的浏览器播放不了html5视频~~~~');
-                    return;
-                }
-
-                this.forceHtml5();
-                this.mockForBestDefintion();
-                this.mockAd();
-                this.mockVip();
-                this.mockLogo();
-            } else {
-                this.forceFlash();
-            }
-
-            window.addEventListener('unload', event => this.destroy());
-        }
-
-        static forceHtml5() {
-            Logger.log(`setting player_forcedType cookie as ${PLAYER_TYPE.Html5VOD}`);
-            Cookies.set('player_forcedType', PLAYER_TYPE.Html5VOD, {domain: '.iqiyi.com'});
-        }
-
-        static forceFlash() {
-            Logger.log(`setting player_forcedType cookie as ${PLAYER_TYPE.FlashVOD}`);
-            Cookies.set('player_forcedType', PLAYER_TYPE.FlashVOD, {domain: '.iqiyi.com'});
+            this.mockForBestDefintion();
+            this.mockAd();
+            this.mockVip();
+            this.mockLogo();
         }
 
         static mockToUseVms() {
@@ -365,12 +383,6 @@
             Hooker.hookLogo(exports => exports.prototype.showLogo = ()=>{});
         }
 
-        static destroy() {
-            Cookies.remove('player_forcedType', {domain: '.iqiyi.com'});
-            if (Cookies.get('P00001') === 'faked_passport') Cookies.remove('P00001', {domain: '.iqiyi.com'});
-            Logger.log(`removed cookies.`);
-        }
-
     }
 
     class Switcher {
@@ -382,6 +394,149 @@
             document.location.reload();
         }
 
+    }
+
+    class Finder {
+
+        static findVid(text) {
+            let result = /vid=([\da-z]+)/.exec(text);
+            return result ? result[1] : null;
+        }
+
+        static findTvid(text) {
+            let result = /tvId=(\d+)/.exec(text);
+            return result ? result[1] : null;
+        }
+
+        static findEmbedNodes() {
+            let nodes = document.querySelectorAll('object, embed');
+            return nodes.length > 0 ? nodes : null;
+        }
+
+    }
+
+    function getVideoUrl(tvid, vid) {
+        return new Promise((resolve, reject) => {
+            GM_xmlhttpRequest({
+                url: `http://cache.video.qiyi.com/jp/vi/${tvid}/${vid}/?callback=callback`,
+                method: 'GET',
+                timeout: 8e3,
+                onload: (details) => {
+                    try {
+                        let json = JSON.parse(/callback\s*\(\s*(\{.*\})\s*\)/.exec(details.responseText)[1]);
+                        resolve(json.vu);
+                    } catch (err) {
+                        reject(err);
+                    }
+                },
+                onerror: reject,
+                onabort: reject,
+                ontimeout: reject
+            });
+        });
+    }
+
+    function embedSrc(targetNode, {tvid, vid}) {
+        targetNode.innerHTML = `<div class="${GM_info.script.name} info">正在获取视频源...</div>`;
+
+        getVideoUrl(tvid, vid).then((url) => {
+            targetNode.innerHTML = `<iframe id="innerFrame" src="${url}" frameborder="0" allowfullscreen="true" width="100%" height="100%"></iframe>`;
+        }).catch((err) => {
+            targetNode.innerHTML = `<div class="${GM_info.script.name} error"><p>获取视频源出错！</p><p>${err.message}</p></div>`;
+        });
+    }
+
+    function replaceFlash() {
+        let nodes = Finder.findEmbedNodes();
+        if (!nodes) return;
+
+        for (let node of nodes) {
+            let text = node.outerHTML;
+
+            let vid = Finder.findVid(text);
+            let tvid = Finder.findTvid(text);
+
+            if (tvid && vid) {
+                embedSrc(node.parentNode, {tvid, vid});
+            }
+        }
+    }
+
+    function adapteIframe() {
+        let style = `
+            body[class|="qypage"] {
+                overflow: hidden !important;
+                background: #000 !important;
+                visibility: hidden;
+            }
+
+            .mod-func {
+                display: none !important;
+            }
+
+            .${GM_info.script.name}.info {
+                width: 20em;
+                height: 5em;
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                margin: auto;
+                text-align: center;
+                line-height: 5em;
+                font-size: 1em;
+                color: #ccc;
+            }
+
+            .${GM_info.script.name}.error {
+                height: 3em;
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                margin: auto;
+                text-align: center;
+                font-size: 1em;
+                color: #c00;
+            }
+        `;
+
+        GM_addStyle(style);
+
+        Hooker.hookWebFullScreen((exports) => {
+            const init = exports.__proto__.init;
+            exports.__proto__.init = function(wrapper, btn) {
+                init.apply(this, [wrapper, btn]);
+                this.enter();
+
+                btn[0].style.display = 'none';
+                document.body.style.visibility = 'visible';
+            };
+
+            exports.__proto__.exit = () => {};
+        });
+
+        Hooker.hookCore((exports) => {
+            exports.prototype.hasNextVideo = () => null;
+        });
+    }
+
+    function forceHtml5() {
+        Logger.log(`setting player_forcedType cookie as ${PLAYER_TYPE.Html5VOD}`);
+        Cookies.set('player_forcedType', PLAYER_TYPE.Html5VOD, {domain: '.iqiyi.com'});
+    }
+
+    function forceFlash() {
+        Logger.log(`setting player_forcedType cookie as ${PLAYER_TYPE.FlashVOD}`);
+        Cookies.set('player_forcedType', PLAYER_TYPE.FlashVOD, {domain: '.iqiyi.com'});
+    }
+
+    function clean() {
+        Cookies.remove('player_forcedType', {domain: '.iqiyi.com'});
+        if (Cookies.get('P00001') === 'faked_passport') Cookies.remove('P00001', {domain: '.iqiyi.com'});
+        Logger.log(`removed cookies.`);
     }
 
     function registerMenu() {
@@ -396,8 +551,26 @@
         Logger.log(`registered menu.`);
     }
 
+//=============================================================================
 
     registerMenu();
-    Mocker.mock();
+
+    let currType = GM_getValue('player_forcedType', PLAYER_TYPE.Html5VOD);
+    if (currType === PLAYER_TYPE.Html5VOD) {
+        if (!Detector.isSupportHtml5()) {
+            alert('╮(╯▽╰)╭ 你的浏览器播放不了html5视频~~~~');
+            return;
+        }
+
+        forceHtml5();
+        Mocker.mock();
+
+        if (Detector.isInnerFrame()) adapteIframe();
+        document.addEventListener('DOMContentLoaded', () => replaceFlash());
+    } else {
+        forceFlash();
+    }
+
+    window.addEventListener('unload', () => clean());
 
 })();

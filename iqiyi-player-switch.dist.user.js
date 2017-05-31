@@ -9,23 +9,27 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 // ==UserScript==
-// @name         iqiyi player switch
+// @name         iqiyi-player-switch
 // @namespace    https://github.com/gooyie/userscript-iqiyi-player-switch
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js
-// @version      1.7.0
+// @version      1.8.0
 // @description  iqiyi player switch between flash and html5
 // @author       gooyie
 // @license      MIT License
 //
 // @include      *://*.iqiyi.com/*
+// @include      *://v.baidu.com/*
 // @grant        GM_registerMenuCommand
+// @grant        GM_xmlhttpRequest
+// @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_info
 // @grant        GM_log
 // @grant        unsafeWindow
+// @connect      qiyi.com
 // @require      https://greasyfork.org/scripts/29319-web-streams-polyfill/code/web-streams-polyfill.js?version=191261
 // @require      https://greasyfork.org/scripts/29306-fetch-readablestream/code/fetch-readablestream.js?version=191832
 // @require      https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.3.4/adapter.min.js
@@ -71,6 +75,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             value: function get(key) {
                 var value = void 0;
                 if (new RegExp('^[^\\x00-\\x20\\x7f\\(\\)<>@,;:\\\\\\"\\[\\]\\?=\\{\\}\\/\\u0080-\\uffff]+$').test(key)) {
+                    // eslint-disable-line no-control-regex
                     var re = new RegExp('(^| )' + key + '=([^;]*)(;|$)');
                     var rs = re.exec(document.cookie);
                     value = rs ? rs[2] : '';
@@ -146,6 +151,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             value: function isEdge() {
                 return (/edge/i.test(navigator.userAgent)
                 );
+            }
+        }, {
+            key: 'isInnerFrame',
+            value: function isInnerFrame() {
+                return window.top !== window.self;
             }
         }]);
 
@@ -314,6 +324,94 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     if (_this4._isLogoFactoryCall(args[1].exports)) cb(args[1].exports);
                 });
             }
+        }, {
+            key: '_isFullScreenFactoryCall',
+            value: function _isFullScreenFactoryCall() {
+                var exports = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+                return exports.__proto__ && exports.__proto__.hasOwnProperty('isFullScreen');
+            }
+        }, {
+            key: 'hookFullScreen',
+            value: function hookFullScreen() {
+                var _this5 = this;
+
+                var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
+
+                this.hookFactoryCall(function () {
+                    for (var _len8 = arguments.length, args = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+                        args[_key8] = arguments[_key8];
+                    }
+
+                    if (_this5._isFullScreenFactoryCall(args[1].exports)) cb(args[1].exports);
+                });
+            }
+        }, {
+            key: '_isWebFullScreenFactoryCall',
+            value: function _isWebFullScreenFactoryCall() {
+                var exports = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+                return exports.__proto__ && exports.__proto__.hasOwnProperty('isWebFullScreen');
+            }
+        }, {
+            key: 'hookWebFullScreen',
+            value: function hookWebFullScreen() {
+                var _this6 = this;
+
+                var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
+
+                this.hookFactoryCall(function () {
+                    for (var _len9 = arguments.length, args = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
+                        args[_key9] = arguments[_key9];
+                    }
+
+                    if (_this6._isWebFullScreenFactoryCall(args[1].exports)) cb(args[1].exports);
+                });
+            }
+        }, {
+            key: '_isPluginControlsFactoryCall',
+            value: function _isPluginControlsFactoryCall() {
+                var exports = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+                return 'function' === typeof exports && exports.prototype.hasOwnProperty('initFullScreen');
+            }
+        }, {
+            key: 'hookPluginControls',
+            value: function hookPluginControls() {
+                var _this7 = this;
+
+                var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
+
+                this.hookFactoryCall(function () {
+                    for (var _len10 = arguments.length, args = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
+                        args[_key10] = arguments[_key10];
+                    }
+
+                    if (_this7._isPluginControlsFactoryCall(args[1].exports)) cb(args[1].exports);
+                });
+            }
+        }, {
+            key: '_isCoreFactoryCall',
+            value: function _isCoreFactoryCall() {
+                var exports = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+                return 'function' === typeof exports && exports.prototype.hasOwnProperty('getdefaultvds') && exports.prototype.hasOwnProperty('getMovieInfo');
+            }
+        }, {
+            key: 'hookCore',
+            value: function hookCore() {
+                var _this8 = this;
+
+                var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
+
+                this.hookFactoryCall(function () {
+                    for (var _len11 = arguments.length, args = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
+                        args[_key11] = arguments[_key11];
+                    }
+
+                    if (_this8._isCoreFactoryCall(args[1].exports)) cb(args[1].exports);
+                });
+            }
         }]);
 
         return Hooker;
@@ -390,40 +488,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         _createClass(Mocker, null, [{
             key: 'mock',
             value: function mock() {
-                var _this5 = this;
-
-                var currType = GM_getValue('player_forcedType', PLAYER_TYPE.Html5VOD);
-
-                if (currType === PLAYER_TYPE.Html5VOD) {
-                    if (!Detector.isSupportHtml5()) {
-                        alert('╮(╯▽╰)╭ 你的浏览器播放不了html5视频~~~~');
-                        return;
-                    }
-
-                    this.forceHtml5();
-                    this.mockForBestDefintion();
-                    this.mockAd();
-                    this.mockVip();
-                    this.mockLogo();
-                } else {
-                    this.forceFlash();
-                }
-
-                window.addEventListener('unload', function (event) {
-                    return _this5.destroy();
-                });
-            }
-        }, {
-            key: 'forceHtml5',
-            value: function forceHtml5() {
-                Logger.log('setting player_forcedType cookie as ' + PLAYER_TYPE.Html5VOD);
-                Cookies.set('player_forcedType', PLAYER_TYPE.Html5VOD, { domain: '.iqiyi.com' });
-            }
-        }, {
-            key: 'forceFlash',
-            value: function forceFlash() {
-                Logger.log('setting player_forcedType cookie as ' + PLAYER_TYPE.FlashVOD);
-                Cookies.set('player_forcedType', PLAYER_TYPE.FlashVOD, { domain: '.iqiyi.com' });
+                this.mockForBestDefintion();
+                this.mockAd();
+                this.mockVip();
+                this.mockLogo();
             }
         }, {
             key: 'mockToUseVms',
@@ -445,14 +513,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'mockForBestDefintion',
             value: function mockForBestDefintion() {
-                var _this6 = this;
+                var _this9 = this;
 
                 // apply shims
                 if (Detector.isFirefox()) {
                     var fetch = unsafeWindow.fetch.bind(unsafeWindow);
 
                     unsafeWindow.fetch = function (url, opts) {
-                        if (_this6._isVideoReq(url)) {
+                        if (_this9._isVideoReq(url)) {
                             Logger.log('fetching stream ' + url);
                             return fetchStream(url, opts); // xhr with moz-chunked-arraybuffer
                         } else {
@@ -483,10 +551,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'mockAd',
             value: function mockAd() {
-                var _this7 = this;
+                var _this10 = this;
 
                 Hooker.hookJqueryAjax(function (url, options) {
-                    if (_this7._isAdReq(url)) {
+                    if (_this10._isAdReq(url)) {
                         var res = Faker.fakeAdRes();
                         (options.complete || options.success)({ responseJSON: res }, 'success');
                         Logger.log('mocked ad request ' + url);
@@ -508,14 +576,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'mockVip',
             value: function mockVip() {
-                var _this8 = this;
+                var _this11 = this;
 
                 if (!this._isLogin()) Faker.fakePassportCookie();
 
                 Hooker.hookHttpJsonp(function (options) {
                     var url = options.url;
 
-                    if (_this8._isCheckVipReq(url)) {
+                    if (_this11._isCheckVipReq(url)) {
                         var res = Faker.fakeVipRes(options.params.authcookie);
                         options.success(res);
                         Logger.log('mocked check vip request ' + url);
@@ -529,13 +597,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 Hooker.hookLogo(function (exports) {
                     return exports.prototype.showLogo = function () {};
                 });
-            }
-        }, {
-            key: 'destroy',
-            value: function destroy() {
-                Cookies.remove('player_forcedType', { domain: '.iqiyi.com' });
-                if (Cookies.get('P00001') === 'faked_passport') Cookies.remove('P00001', { domain: '.iqiyi.com' });
-                Logger.log('removed cookies.');
             }
         }]);
 
@@ -560,6 +621,146 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         return Switcher;
     }();
 
+    var Finder = function () {
+        function Finder() {
+            _classCallCheck(this, Finder);
+        }
+
+        _createClass(Finder, null, [{
+            key: 'findVid',
+            value: function findVid(text) {
+                var result = /vid=([\da-z]+)/.exec(text);
+                return result ? result[1] : null;
+            }
+        }, {
+            key: 'findTvid',
+            value: function findTvid(text) {
+                var result = /tvId=(\d+)/.exec(text);
+                return result ? result[1] : null;
+            }
+        }, {
+            key: 'findEmbedNodes',
+            value: function findEmbedNodes() {
+                var nodes = document.querySelectorAll('object, embed');
+                return nodes.length > 0 ? nodes : null;
+            }
+        }]);
+
+        return Finder;
+    }();
+
+    function getVideoUrl(tvid, vid) {
+        return new Promise(function (resolve, reject) {
+            GM_xmlhttpRequest({
+                url: 'http://cache.video.qiyi.com/jp/vi/' + tvid + '/' + vid + '/?callback=callback',
+                method: 'GET',
+                timeout: 8e3,
+                onload: function onload(details) {
+                    try {
+                        var json = JSON.parse(/callback\s*\(\s*(\{.*\})\s*\)/.exec(details.responseText)[1]);
+                        resolve(json.vu);
+                    } catch (err) {
+                        reject(err);
+                    }
+                },
+                onerror: reject,
+                onabort: reject,
+                ontimeout: reject
+            });
+        });
+    }
+
+    function embedSrc(targetNode, _ref2) {
+        var tvid = _ref2.tvid,
+            vid = _ref2.vid;
+
+        targetNode.innerHTML = '<div class="' + GM_info.script.name + ' info">\u6B63\u5728\u83B7\u53D6\u89C6\u9891\u6E90...</div>';
+
+        getVideoUrl(tvid, vid).then(function (url) {
+            targetNode.innerHTML = '<iframe id="innerFrame" src="' + url + '" frameborder="0" allowfullscreen="true" width="100%" height="100%"></iframe>';
+        }).catch(function (err) {
+            targetNode.innerHTML = '<div class="' + GM_info.script.name + ' error"><p>\u83B7\u53D6\u89C6\u9891\u6E90\u51FA\u9519\uFF01</p><p>' + err.message + '</p></div>';
+        });
+    }
+
+    function replaceFlash() {
+        var nodes = Finder.findEmbedNodes();
+        if (!nodes) return;
+
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
+
+        try {
+            for (var _iterator = nodes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                var node = _step.value;
+
+                var text = node.outerHTML;
+
+                var vid = Finder.findVid(text);
+                var tvid = Finder.findTvid(text);
+
+                if (tvid && vid) {
+                    embedSrc(node.parentNode, { tvid: tvid, vid: vid });
+                }
+            }
+        } catch (err) {
+            _didIteratorError = true;
+            _iteratorError = err;
+        } finally {
+            try {
+                if (!_iteratorNormalCompletion && _iterator.return) {
+                    _iterator.return();
+                }
+            } finally {
+                if (_didIteratorError) {
+                    throw _iteratorError;
+                }
+            }
+        }
+    }
+
+    function adapteIframe() {
+        var style = '\n            body[class|="qypage"] {\n                overflow: hidden !important;\n                background: #000 !important;\n                visibility: hidden;\n            }\n\n            .mod-func {\n                display: none !important;\n            }\n\n            .' + GM_info.script.name + '.info {\n                width: 20em;\n                height: 5em;\n                position: absolute;\n                top: 0;\n                bottom: 0;\n                left: 0;\n                right: 0;\n                margin: auto;\n                text-align: center;\n                line-height: 5em;\n                font-size: 1em;\n                color: #ccc;\n            }\n\n            .' + GM_info.script.name + '.error {\n                height: 3em;\n                position: absolute;\n                top: 0;\n                bottom: 0;\n                left: 0;\n                right: 0;\n                margin: auto;\n                text-align: center;\n                font-size: 1em;\n                color: #c00;\n            }\n        ';
+
+        GM_addStyle(style);
+
+        Hooker.hookWebFullScreen(function (exports) {
+            var init = exports.__proto__.init;
+            exports.__proto__.init = function (wrapper, btn) {
+                init.apply(this, [wrapper, btn]);
+                this.enter();
+
+                btn[0].style.display = 'none';
+                document.body.style.visibility = 'visible';
+            };
+
+            exports.__proto__.exit = function () {};
+        });
+
+        Hooker.hookCore(function (exports) {
+            exports.prototype.hasNextVideo = function () {
+                return null;
+            };
+        });
+    }
+
+    function forceHtml5() {
+        Logger.log('setting player_forcedType cookie as ' + PLAYER_TYPE.Html5VOD);
+        Cookies.set('player_forcedType', PLAYER_TYPE.Html5VOD, { domain: '.iqiyi.com' });
+    }
+
+    function forceFlash() {
+        Logger.log('setting player_forcedType cookie as ' + PLAYER_TYPE.FlashVOD);
+        Cookies.set('player_forcedType', PLAYER_TYPE.FlashVOD, { domain: '.iqiyi.com' });
+    }
+
+    function clean() {
+        Cookies.remove('player_forcedType', { domain: '.iqiyi.com' });
+        if (Cookies.get('P00001') === 'faked_passport') Cookies.remove('P00001', { domain: '.iqiyi.com' });
+        Logger.log('removed cookies.');
+    }
+
     function registerMenu() {
         var MENU_NAME = {
             HTML5: 'HTML5播放器',
@@ -568,10 +769,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         var currType = GM_getValue('player_forcedType', PLAYER_TYPE.Html5VOD); // 默认为Html5播放器，免去切换。
 
-        var _ref2 = currType === PLAYER_TYPE.Html5VOD ? [PLAYER_TYPE.FlashVOD, MENU_NAME.FLASH] : [PLAYER_TYPE.Html5VOD, MENU_NAME.HTML5],
-            _ref3 = _slicedToArray(_ref2, 2),
-            toType = _ref3[0],
-            name = _ref3[1];
+        var _ref3 = currType === PLAYER_TYPE.Html5VOD ? [PLAYER_TYPE.FlashVOD, MENU_NAME.FLASH] : [PLAYER_TYPE.Html5VOD, MENU_NAME.HTML5],
+            _ref4 = _slicedToArray(_ref3, 2),
+            toType = _ref4[0],
+            name = _ref4[1];
 
         GM_registerMenuCommand(name, function () {
             return Switcher.switchTo(toType);
@@ -579,6 +780,29 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         Logger.log('registered menu.');
     }
 
+    //=============================================================================
+
     registerMenu();
-    Mocker.mock();
+
+    var currType = GM_getValue('player_forcedType', PLAYER_TYPE.Html5VOD);
+    if (currType === PLAYER_TYPE.Html5VOD) {
+        if (!Detector.isSupportHtml5()) {
+            alert('╮(╯▽╰)╭ 你的浏览器播放不了html5视频~~~~');
+            return;
+        }
+
+        forceHtml5();
+        Mocker.mock();
+
+        if (Detector.isInnerFrame()) adapteIframe();
+        document.addEventListener('DOMContentLoaded', function () {
+            return replaceFlash();
+        });
+    } else {
+        forceFlash();
+    }
+
+    window.addEventListener('unload', function () {
+        return clean();
+    });
 })();
