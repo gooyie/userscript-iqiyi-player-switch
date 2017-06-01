@@ -144,7 +144,7 @@
         }
 
         static _isFactoryCall(args) { // module.exports, module, module.exports, require
-            return args.length === 4 && 'object' === typeof args[1] && args[1].hasOwnProperty('exports');
+            return args.length === 4 && args[1] instanceof Object && args[1].hasOwnProperty('exports');
         }
 
         static hookFactoryCall(cb = ()=>{}) {
