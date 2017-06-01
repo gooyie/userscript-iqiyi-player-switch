@@ -6,7 +6,8 @@
   "scripts": {
     "lint": "eslint iqiyi-player-switch.user.js",
     "prebuild": "npm run lint",
-    "build": "babel iqiyi-player-switch.user.js -o iqiyi-player-switch.dist.user.js"
+    "build": "babel iqiyi-player-switch.user.js -o iqiyi-player-switch.dist.user.js",
+    "precommit": "npm run lint"
   },
   "repository": {
     "type": "git",
@@ -28,6 +29,7 @@
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-preset-es2015": "^6.24.1",
-    "eslint": "^3.19.0"
+    "eslint": "^3.19.0",
+    "husky": "^0.13.4"
   }
 }
