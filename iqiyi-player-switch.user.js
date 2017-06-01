@@ -174,13 +174,11 @@
         }
 
         static hookJquery(cb = ()=>{}) {
-            this.hookFactoryCall((...args) => {if (this._isJqueryFactoryCall(args[1].exports)) cb(...args);});
+            this.hookFactoryCall((...args) => {if (this._isJqueryFactoryCall(args[1].exports)) cb(args[1].exports);});
         }
 
         static hookJqueryAjax(cb = ()=>{}) {
-            this.hookJquery((...args) => {
-                let exports = args[1].exports;
-
+            this.hookJquery((exports) => {
                 const ajax = exports.ajax.bind(exports);
 
                 exports.ajax = function(url, options = {}) {
@@ -201,13 +199,11 @@
         }
 
         static hookHttp(cb = ()=>{}) {
-            this.hookFactoryCall((...args) => {if (this._isHttpFactoryCall(args[1].exports)) cb(...args);});
+            this.hookFactoryCall((...args) => {if (this._isHttpFactoryCall(args[1].exports)) cb(args[1].exports);});
         }
 
         static hookHttpJsonp(cb = ()=>{}) {
-            this.hookHttp((...args) => {
-                let exports = args[1].exports;
-
+            this.hookHttp((exports) => {
                 const jsonp = exports.jsonp.bind(exports);
 
                 exports.jsonp = function(options) {
