@@ -145,18 +145,20 @@
     class Hooker {
 
         static hookCall(cb = ()=>{}) {
-
             const call = Function.prototype.call;
             Function.prototype.call = function(...args) {
-                let ret = call.bind(this)(...args);
-                if (args) cb(...args);
+                let ret = call.apply(this, args);
+                try {
+                    if (args) cb(...args);
+                } catch (err) {
+                    Logger.error(err.stack);
+                }
                 return ret;
             };
 
             Function.prototype.call.toString = Function.prototype.call.toLocaleString = function() {
                 return 'function call() { [native code] }';
             };
-
         }
 
         static _isFactoryCall(args) { // module.exports, module, module.exports, require
