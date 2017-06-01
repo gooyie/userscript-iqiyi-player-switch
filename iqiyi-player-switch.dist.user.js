@@ -14,7 +14,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js
-// @version      1.8.0
+// @version      1.8.1
 // @description  iqiyi player switch between flash and html5
 // @author       gooyie
 // @license      MIT License
@@ -27,7 +27,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_info
-// @grant        GM_log
 // @grant        unsafeWindow
 // @connect      qiyi.com
 // @require      https://greasyfork.org/scripts/29319-web-streams-polyfill/code/web-streams-polyfill.js?version=191261
@@ -44,6 +43,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         Html5VOD: 'h5_VOD',
         FlashVOD: 'flash_VOD'
     };
+    /* eslint-disable no-console */
 
     var Logger = function () {
         function Logger() {
@@ -52,18 +52,70 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         _createClass(Logger, null, [{
             key: 'log',
-            value: function log(msg) {
-                GM_log(this.tag + msg);
+            value: function log() {
+                var _console;
+
+                for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                    args[_key] = arguments[_key];
+                }
+
+                (_console = console).log.apply(_console, ['%c' + this.tag + '%c' + args.shift(), 'color: green; font-weight: bolder', 'color: blue'].concat(args));
+            }
+        }, {
+            key: 'info',
+            value: function info() {
+                var _console2;
+
+                for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                    args[_key2] = arguments[_key2];
+                }
+
+                (_console2 = console).info.apply(_console2, [this.tag + args.shift()].concat(args));
+            }
+        }, {
+            key: 'debug',
+            value: function debug() {
+                var _console3;
+
+                for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+                    args[_key3] = arguments[_key3];
+                }
+
+                (_console3 = console).debug.apply(_console3, [this.tag + args.shift()].concat(args));
+            }
+        }, {
+            key: 'warn',
+            value: function warn() {
+                var _console4;
+
+                for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+                    args[_key4] = arguments[_key4];
+                }
+
+                (_console4 = console).warn.apply(_console4, [this.tag + args.shift()].concat(args));
+            }
+        }, {
+            key: 'error',
+            value: function error() {
+                var _console5;
+
+                for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+                    args[_key5] = arguments[_key5];
+                }
+
+                (_console5 = console).error.apply(_console5, [this.tag + args.shift()].concat(args));
             }
         }, {
             key: 'tag',
             get: function get() {
-                return '[' + GM_info.script.name + ']: ';
+                return '[' + GM_info.script.name + ']';
             }
         }]);
 
         return Logger;
     }();
+    /* eslint-enable no-console */
+
 
     var Cookies = function () {
         function Cookies() {
@@ -172,15 +224,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             value: function hookCall() {
                 var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
 
-
                 var call = Function.prototype.call;
                 Function.prototype.call = function () {
-                    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-                        args[_key] = arguments[_key];
+                    for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+                        args[_key6] = arguments[_key6];
                     }
 
-                    var ret = call.bind(this).apply(undefined, args);
-                    if (args) cb.apply(undefined, args);
+                    var ret = call.apply(this, args);
+                    try {
+                        if (args) cb.apply(undefined, args);
+                    } catch (err) {
+                        Logger.error(err.stack);
+                    }
                     return ret;
                 };
 
@@ -192,7 +247,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             key: '_isFactoryCall',
             value: function _isFactoryCall(args) {
                 // module.exports, module, module.exports, require
-                return args.length === 4 && 'object' === _typeof(args[1]) && args[1].hasOwnProperty('exports');
+                return args.length === 4 && args[1] instanceof Object && args[1].hasOwnProperty('exports');
             }
         }, {
             key: 'hookFactoryCall',
@@ -202,8 +257,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
 
                 this.hookCall(function () {
-                    for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-                        args[_key2] = arguments[_key2];
+                    for (var _len7 = arguments.length, args = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+                        args[_key7] = arguments[_key7];
                     }
 
                     if (_this._isFactoryCall(args)) cb.apply(undefined, args);
@@ -222,11 +277,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
 
                 this.hookFactoryCall(function () {
-                    for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-                        args[_key3] = arguments[_key3];
+                    for (var _len8 = arguments.length, args = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+                        args[_key8] = arguments[_key8];
                     }
 
-                    if (_this2._isJqueryFactoryCall(args[1].exports)) cb.apply(undefined, args);
+                    if (_this2._isJqueryFactoryCall(args[1].exports)) cb(args[1].exports);
                 });
             }
         }, {
@@ -234,13 +289,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             value: function hookJqueryAjax() {
                 var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
 
-                this.hookJquery(function () {
-                    for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-                        args[_key4] = arguments[_key4];
-                    }
-
-                    var exports = args[1].exports;
-
+                this.hookJquery(function (exports) {
                     var ajax = exports.ajax.bind(exports);
 
                     exports.ajax = function (url) {
@@ -274,11 +323,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
 
                 this.hookFactoryCall(function () {
-                    for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-                        args[_key5] = arguments[_key5];
+                    for (var _len9 = arguments.length, args = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
+                        args[_key9] = arguments[_key9];
                     }
 
-                    if (_this3._isHttpFactoryCall(args[1].exports)) cb.apply(undefined, args);
+                    if (_this3._isHttpFactoryCall(args[1].exports)) cb(args[1].exports);
                 });
             }
         }, {
@@ -286,13 +335,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             value: function hookHttpJsonp() {
                 var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
 
-                this.hookHttp(function () {
-                    for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-                        args[_key6] = arguments[_key6];
-                    }
-
-                    var exports = args[1].exports;
-
+                this.hookHttp(function (exports) {
                     var jsonp = exports.jsonp.bind(exports);
 
                     exports.jsonp = function (options) {
@@ -317,8 +360,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
 
                 this.hookFactoryCall(function () {
-                    for (var _len7 = arguments.length, args = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-                        args[_key7] = arguments[_key7];
+                    for (var _len10 = arguments.length, args = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
+                        args[_key10] = arguments[_key10];
                     }
 
                     if (_this4._isLogoFactoryCall(args[1].exports)) cb(args[1].exports);
@@ -339,8 +382,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
 
                 this.hookFactoryCall(function () {
-                    for (var _len8 = arguments.length, args = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
-                        args[_key8] = arguments[_key8];
+                    for (var _len11 = arguments.length, args = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
+                        args[_key11] = arguments[_key11];
                     }
 
                     if (_this5._isFullScreenFactoryCall(args[1].exports)) cb(args[1].exports);
@@ -361,8 +404,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
 
                 this.hookFactoryCall(function () {
-                    for (var _len9 = arguments.length, args = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
-                        args[_key9] = arguments[_key9];
+                    for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
+                        args[_key12] = arguments[_key12];
                     }
 
                     if (_this6._isWebFullScreenFactoryCall(args[1].exports)) cb(args[1].exports);
@@ -383,8 +426,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
 
                 this.hookFactoryCall(function () {
-                    for (var _len10 = arguments.length, args = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
-                        args[_key10] = arguments[_key10];
+                    for (var _len13 = arguments.length, args = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
+                        args[_key13] = arguments[_key13];
                     }
 
                     if (_this7._isPluginControlsFactoryCall(args[1].exports)) cb(args[1].exports);
@@ -405,8 +448,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
 
                 this.hookFactoryCall(function () {
-                    for (var _len11 = arguments.length, args = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
-                        args[_key11] = arguments[_key11];
+                    for (var _len14 = arguments.length, args = Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
+                        args[_key14] = arguments[_key14];
                     }
 
                     if (_this8._isCoreFactoryCall(args[1].exports)) cb(args[1].exports);
