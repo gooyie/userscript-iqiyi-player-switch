@@ -17,7 +17,6 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_info
-// @grant        GM_log
 // @grant        unsafeWindow
 // @connect      qiyi.com
 // @require      https://greasyfork.org/scripts/29319-web-streams-polyfill/code/web-streams-polyfill.js?version=191261
@@ -34,19 +33,36 @@
         Html5VOD: 'h5_VOD',
         FlashVOD: 'flash_VOD'
     };
-
+    /* eslint-disable no-console */
     class Logger {
 
         static get tag() {
-            return `[${GM_info.script.name}]: `;
+            return `[${GM_info.script.name}]`;
         }
 
-        static log(msg) {
-            GM_log(this.tag + msg);
+        static log(...args) {
+            console.log('%c' + this.tag + '%c' + args.shift(),
+                'color: green; font-weight: bolder', 'color: blue', ...args);
+        }
+
+        static info(...args) {
+            console.info(this.tag + args.shift(), ...args);
+        }
+
+        static debug(...args) {
+            console.debug(this.tag + args.shift(), ...args);
+        }
+
+        static warn(...args) {
+            console.warn(this.tag + args.shift(), ...args);
+        }
+
+        static error(...args) {
+            console.error(this.tag + args.shift(), ...args);
         }
 
     }
-
+    /* eslint-enable no-console */
     class Cookies {
 
         static get(key) {
