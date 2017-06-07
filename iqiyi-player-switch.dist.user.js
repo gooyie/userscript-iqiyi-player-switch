@@ -14,7 +14,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js
-// @version      1.8.1
+// @version      1.8.2
 // @description  iqiyi player switch between flash and html5
 // @author       gooyie
 // @license      MIT License
@@ -455,6 +455,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     if (_this8._isCoreFactoryCall(args[1].exports)) cb(args[1].exports);
                 });
             }
+        }, {
+            key: '_isSkinBaseFactoryCall',
+            value: function _isSkinBaseFactoryCall() {
+                var exports = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+                return 'function' === typeof exports && exports.prototype.hasOwnProperty('_checkPlugin');
+            }
+        }, {
+            key: 'hookSkinBase',
+            value: function hookSkinBase() {
+                var _this9 = this;
+
+                var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
+
+                this.hookFactoryCall(function () {
+                    for (var _len15 = arguments.length, args = Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
+                        args[_key15] = arguments[_key15];
+                    }
+
+                    if (_this9._isSkinBaseFactoryCall(args[1].exports)) cb(args[1].exports);
+                });
+            }
         }]);
 
         return Hooker;
@@ -535,6 +557,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 this.mockAd();
                 this.mockVip();
                 this.mockLogo();
+                this.mockCheckPlugin();
             }
         }, {
             key: 'mockToUseVms',
@@ -556,14 +579,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'mockForBestDefintion',
             value: function mockForBestDefintion() {
-                var _this9 = this;
+                var _this10 = this;
 
                 // apply shims
                 if (Detector.isFirefox()) {
                     var fetch = unsafeWindow.fetch.bind(unsafeWindow);
 
                     unsafeWindow.fetch = function (url, opts) {
-                        if (_this9._isVideoReq(url)) {
+                        if (_this10._isVideoReq(url)) {
                             Logger.log('fetching stream ' + url);
                             return fetchStream(url, opts); // xhr with moz-chunked-arraybuffer
                         } else {
@@ -594,10 +617,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'mockAd',
             value: function mockAd() {
-                var _this10 = this;
+                var _this11 = this;
 
                 Hooker.hookJqueryAjax(function (url, options) {
-                    if (_this10._isAdReq(url)) {
+                    if (_this11._isAdReq(url)) {
                         var res = Faker.fakeAdRes();
                         (options.complete || options.success)({ responseJSON: res }, 'success');
                         Logger.log('mocked ad request ' + url);
@@ -619,14 +642,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'mockVip',
             value: function mockVip() {
-                var _this11 = this;
+                var _this12 = this;
 
                 if (!this._isLogin()) Faker.fakePassportCookie();
 
                 Hooker.hookHttpJsonp(function (options) {
                     var url = options.url;
 
-                    if (_this11._isCheckVipReq(url)) {
+                    if (_this12._isCheckVipReq(url)) {
                         var res = Faker.fakeVipRes(options.params.authcookie);
                         options.success(res);
                         Logger.log('mocked check vip request ' + url);
@@ -639,6 +662,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             value: function mockLogo() {
                 Hooker.hookLogo(function (exports) {
                     return exports.prototype.showLogo = function () {};
+                });
+            }
+        }, {
+            key: 'mockCheckPlugin',
+            value: function mockCheckPlugin() {
+                Hooker.hookSkinBase(function (exports) {
+                    exports.prototype._checkPlugin = function () {};
                 });
             }
         }]);

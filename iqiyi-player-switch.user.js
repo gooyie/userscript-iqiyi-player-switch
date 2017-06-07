@@ -4,7 +4,7 @@
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js
-// @version      1.8.1
+// @version      1.8.2
 // @description  iqiyi player switch between flash and html5
 // @author       gooyie
 // @license      MIT License
@@ -256,6 +256,14 @@
             this.hookFactoryCall((...args) => {if (this._isCoreFactoryCall(args[1].exports)) cb(args[1].exports);});
         }
 
+        static _isSkinBaseFactoryCall(exports = {}) {
+            return 'function' === typeof exports && exports.prototype.hasOwnProperty('_checkPlugin');
+        }
+
+        static hookSkinBase(cb = ()=>{}) {
+            this.hookFactoryCall((...args) => {if (this._isSkinBaseFactoryCall(args[1].exports)) cb(args[1].exports);});
+        }
+
     }
 
     class Faker {
@@ -309,6 +317,7 @@
             this.mockAd();
             this.mockVip();
             this.mockLogo();
+            this.mockCheckPlugin();
         }
 
         static mockToUseVms() {
@@ -395,6 +404,12 @@
 
         static mockLogo() {
             Hooker.hookLogo(exports => exports.prototype.showLogo = ()=>{});
+        }
+
+        static mockCheckPlugin() {
+            Hooker.hookSkinBase((exports) => {
+                exports.prototype._checkPlugin = () => {};
+            });
         }
 
     }
