@@ -1,6 +1,6 @@
 {
   "name": "iqiyi-player-switch",
-  "version": "1.8.2",
+  "version": "1.8.3",
   "description": "iqiyi player switch between flash and html5",
   "main": "iqiyi-player-switch.user.js",
   "scripts": {
