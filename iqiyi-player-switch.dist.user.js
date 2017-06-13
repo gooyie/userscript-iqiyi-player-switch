@@ -14,7 +14,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js
-// @version      1.8.3
+// @version      1.8.4
 // @description  iqiyi player switch between flash and html5
 // @author       gooyie
 // @license      MIT License
@@ -208,6 +208,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             key: 'isInnerFrame',
             value: function isInnerFrame() {
                 return window.top !== window.self;
+            }
+        }, {
+            key: 'isOutsite',
+            value: function isOutsite() {
+                return !/\.iqiyi\.com$/.test(location.host);
             }
         }]);
 
@@ -757,40 +762,71 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }
 
     function replaceFlash() {
-        var nodes = Finder.findEmbedNodes();
-        if (!nodes) return;
+        var observer = new MutationObserver(function (records, self) {
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
 
-        var _iteratorNormalCompletion = true;
-        var _didIteratorError = false;
-        var _iteratorError = undefined;
-
-        try {
-            for (var _iterator = nodes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                var node = _step.value;
-
-                var text = node.outerHTML;
-
-                var vid = Finder.findVid(text);
-                var tvid = Finder.findTvid(text);
-
-                if (tvid && vid) {
-                    embedSrc(node.parentNode, { tvid: tvid, vid: vid });
-                }
-            }
-        } catch (err) {
-            _didIteratorError = true;
-            _iteratorError = err;
-        } finally {
             try {
-                if (!_iteratorNormalCompletion && _iterator.return) {
-                    _iterator.return();
+                for (var _iterator = records[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var record = _step.value;
+
+                    if (record.type !== 'childList' || !record.addedNodes) continue;
+
+                    var _iteratorNormalCompletion2 = true;
+                    var _didIteratorError2 = false;
+                    var _iteratorError2 = undefined;
+
+                    try {
+                        for (var _iterator2 = record.addedNodes[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                            var node = _step2.value;
+
+                            if (node.nodeName !== 'OBJECT' && node.nodeName !== 'EMBED') continue;
+
+                            var text = node.outerHTML;
+                            var vid = Finder.findVid(text);
+                            var tvid = Finder.findTvid(text);
+
+                            if (tvid && vid) {
+                                Logger.log('finded player', node);
+                                embedSrc(node.parentNode, { tvid: tvid, vid: vid });
+                                self.disconnect();
+                                Logger.log('stoped observation');
+                            }
+                        }
+                    } catch (err) {
+                        _didIteratorError2 = true;
+                        _iteratorError2 = err;
+                    } finally {
+                        try {
+                            if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                                _iterator2.return();
+                            }
+                        } finally {
+                            if (_didIteratorError2) {
+                                throw _iteratorError2;
+                            }
+                        }
+                    }
                 }
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
             } finally {
-                if (_didIteratorError) {
-                    throw _iteratorError;
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
                 }
             }
-        }
+        });
+
+        observer.observe(document.body || document.documentElement, { subtree: true, childList: true });
+        Logger.log('started observation');
     }
 
     function adapteIframe() {
@@ -868,9 +904,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         Mocker.mock();
 
         if (Detector.isInnerFrame()) adapteIframe();
-        document.addEventListener('DOMContentLoaded', function () {
-            return replaceFlash();
-        });
+        if (Detector.isOutsite()) replaceFlash();
     } else {
         forceFlash();
     }

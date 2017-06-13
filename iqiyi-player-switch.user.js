@@ -4,7 +4,7 @@
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js
-// @version      1.8.3
+// @version      1.8.4
 // @description  iqiyi player switch between flash and html5
 // @author       gooyie
 // @license      MIT License
@@ -138,6 +138,10 @@
 
         static isInnerFrame() {
             return window.top !== window.self;
+        }
+
+        static isOutsite() {
+            return !/\.iqiyi\.com$/.test(location.host);
         }
 
     }
@@ -476,19 +480,29 @@
     }
 
     function replaceFlash() {
-        let nodes = Finder.findEmbedNodes();
-        if (!nodes) return;
+        const observer = new MutationObserver((records, self) => {
+            for (let record of records) {
+                if (record.type !== 'childList' || !record.addedNodes) continue;
 
-        for (let node of nodes) {
-            let text = node.outerHTML;
+                for (let node of record.addedNodes) {
+                    if (node.nodeName !== 'OBJECT' && node.nodeName !== 'EMBED') continue;
 
-            let vid = Finder.findVid(text);
-            let tvid = Finder.findTvid(text);
+                    let text = node.outerHTML;
+                    let vid = Finder.findVid(text);
+                    let tvid = Finder.findTvid(text);
 
-            if (tvid && vid) {
-                embedSrc(node.parentNode, {tvid, vid});
+                    if (tvid && vid) {
+                        Logger.log('finded player', node);
+                        embedSrc(node.parentNode, {tvid, vid});
+                        self.disconnect();
+                        Logger.log('stoped observation');
+                    }
+                }
             }
-        }
+        });
+
+        observer.observe(document.body || document.documentElement, {subtree: true, childList: true});
+        Logger.log('started observation');
     }
 
     function adapteIframe() {
@@ -595,7 +609,7 @@
         Mocker.mock();
 
         if (Detector.isInnerFrame()) adapteIframe();
-        document.addEventListener('DOMContentLoaded', () => replaceFlash());
+        if (Detector.isOutsite()) replaceFlash();
     } else {
         forceFlash();
     }
