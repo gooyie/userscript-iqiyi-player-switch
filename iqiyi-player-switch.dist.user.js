@@ -14,7 +14,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js
-// @version      1.8.5
+// @version      1.9.0
 // @description  爱奇艺flash播放器与html5播放器随意切换，改善html5播放器播放体验。
 // @author       gooyie
 // @license      MIT License
@@ -213,6 +213,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             key: 'isOutsite',
             value: function isOutsite() {
                 return !/\.iqiyi\.com$/.test(location.host);
+            }
+        }, {
+            key: 'isFullScreen',
+            value: function isFullScreen() {
+                return !!(document.fullscreen || document.webkitIsFullScreen || document.mozFullScreen || document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement);
             }
         }]);
 
@@ -417,6 +422,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 });
             }
         }, {
+            key: 'hookWebFullScreenInit',
+            value: function hookWebFullScreenInit() {
+                var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
+
+                this.hookWebFullScreen(function (exports) {
+                    var init = exports.__proto__.init;
+                    exports.__proto__.init = function (wrapper, btn) {
+                        cb(this, wrapper, btn);
+                        init.apply(this, [wrapper, btn]);
+                    };
+                });
+            }
+        }, {
             key: '_isPluginControlsFactoryCall',
             value: function _isPluginControlsFactoryCall() {
                 var exports = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -436,6 +454,32 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     }
 
                     if (_this7._isPluginControlsFactoryCall(args[1].exports)) cb(args[1].exports);
+                });
+            }
+        }, {
+            key: 'hookPluginControlsInit',
+            value: function hookPluginControlsInit() {
+                var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
+
+                this.hookPluginControls(function (exports) {
+                    var init = exports.prototype.init;
+                    exports.prototype.init = function () {
+                        cb(this);
+                        init.apply(this);
+                    };
+                });
+            }
+        }, {
+            key: 'hookInitFullScreen',
+            value: function hookInitFullScreen() {
+                var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
+
+                this.hookPluginControls(function (exports) {
+                    var initFullScreen = exports.prototype.initFullScreen;
+                    exports.prototype.initFullScreen = function () {
+                        cb(this);
+                        initFullScreen.apply(this);
+                    };
                 });
             }
         }, {
@@ -480,6 +524,67 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     }
 
                     if (_this9._isSkinBaseFactoryCall(args[1].exports)) cb(args[1].exports);
+                });
+            }
+        }, {
+            key: '_isPluginHotKeysFactoryCall',
+            value: function _isPluginHotKeysFactoryCall() {
+                var exports = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+                return 'function' === typeof exports && exports.prototype.hasOwnProperty('_keydown');
+            }
+        }, {
+            key: 'hookPluginHotKeys',
+            value: function hookPluginHotKeys() {
+                var _this10 = this;
+
+                var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
+
+                this.hookFactoryCall(function () {
+                    for (var _len16 = arguments.length, args = Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
+                        args[_key16] = arguments[_key16];
+                    }
+
+                    if (_this10._isPluginHotKeysFactoryCall(args[1].exports)) cb(args[1].exports);
+                });
+            }
+        }, {
+            key: '_isFragmentFactoryCall',
+            value: function _isFragmentFactoryCall() {
+                var exports = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+                return 'function' === typeof exports && exports.prototype.hasOwnProperty('parseData');
+            }
+        }, {
+            key: 'hookFragment',
+            value: function hookFragment() {
+                var _this11 = this;
+
+                var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
+
+                this.hookFactoryCall(function () {
+                    for (var _len17 = arguments.length, args = Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
+                        args[_key17] = arguments[_key17];
+                    }
+
+                    if (_this11._isFragmentFactoryCall(args[1].exports)) cb(args[1].exports);
+                });
+            }
+        }, {
+            key: 'hookParseData',
+            value: function hookParseData() {
+                var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
+
+                this.hookFragment(function (exports) {
+                    var parseData = exports.prototype.parseData;
+                    exports.prototype.parseData = function () {
+                        for (var _len18 = arguments.length, args = Array(_len18), _key18 = 0; _key18 < _len18; _key18++) {
+                            args[_key18] = arguments[_key18];
+                        }
+
+                        parseData.apply(this, args);
+                        cb(this);
+                    };
                 });
             }
         }]);
@@ -584,14 +689,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'mockForBestDefintion',
             value: function mockForBestDefintion() {
-                var _this10 = this;
+                var _this12 = this;
 
                 // apply shims
                 if (Detector.isFirefox()) {
                     var fetch = unsafeWindow.fetch.bind(unsafeWindow);
 
                     unsafeWindow.fetch = function (url, opts) {
-                        if (_this10._isVideoReq(url)) {
+                        if (_this12._isVideoReq(url)) {
                             Logger.log('fetching stream ' + url);
                             return fetchStream(url, opts); // xhr with moz-chunked-arraybuffer
                         } else {
@@ -622,10 +727,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'mockAd',
             value: function mockAd() {
-                var _this11 = this;
+                var _this13 = this;
 
                 Hooker.hookJqueryAjax(function (url, options) {
-                    if (_this11._isAdReq(url)) {
+                    if (_this13._isAdReq(url)) {
                         var res = Faker.fakeAdRes();
                         (options.complete || options.success)({ responseJSON: res }, 'success');
                         Logger.log('mocked ad request ' + url);
@@ -647,14 +752,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'mockVip',
             value: function mockVip() {
-                var _this12 = this;
+                var _this14 = this;
 
                 if (!this._isLogin()) Faker.fakePassportCookie();
 
                 Hooker.hookHttpJsonp(function (options) {
                     var url = options.url;
 
-                    if (_this12._isCheckVipReq(url)) {
+                    if (_this14._isCheckVipReq(url)) {
                         var res = Faker.fakeVipRes(options.params.authcookie);
                         options.success(res);
                         Logger.log('mocked check vip request ' + url);
@@ -679,6 +784,335 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }]);
 
         return Mocker;
+    }();
+
+    var Patcher = function () {
+        function Patcher() {
+            _classCallCheck(this, Patcher);
+        }
+
+        _createClass(Patcher, null, [{
+            key: '_patchWebFullScreen',
+            value: function _patchWebFullScreen() {
+                Hooker.hookWebFullScreenInit(function (that, wrapper, btn) {
+                    btn.on('toggle', that.toggle.bind(that));
+                });
+            }
+        }, {
+            key: '_patchInitFullScreen',
+            value: function _patchInitFullScreen() {
+                this._patchWebFullScreen();
+
+                Hooker.hookInitFullScreen(function (that) {
+                    that.core.on('togglefullscreen', function () {
+                        that._fullscreenBtn.fire('click', { data: null });
+                    });
+
+                    that.core.on('togglewebfullscreen', function () {
+                        that._webfullscreenBtn.fire('toggle', { data: null });
+                    });
+                });
+            }
+        }, {
+            key: '_patchPluginControls',
+            value: function _patchPluginControls() {
+                Hooker.hookPluginControlsInit(function (that) {
+                    that.core.on('showtip', function (event) {
+                        that.setcontroltip.apply(that, [{ str: event.data, x: that._process.offset().left, y: 3, cut: true, timeout: true }]);
+                        if (that.$plugin.hasClass('process_hidden')) {
+                            that._controltips.css('top', '-25px');
+                        } else if (that.$plugin.hasClass('bottom-hide')) {
+                            that._controltips.css('top', '-38px');
+                        }
+                    });
+                });
+            }
+        }, {
+            key: '_obtainFlvInfo',
+            value: function _obtainFlvInfo() {
+                var _this15 = this;
+
+                Hooker.hookParseData(function (that) {
+                    return _this15._flvInfo = that.flvInfo;
+                });
+            }
+        }, {
+            key: '_patchCore',
+            value: function _patchCore() {
+                var self = this;
+
+                this._patchPluginControls();
+                this._patchInitFullScreen();
+                this._obtainFlvInfo();
+
+                Hooker.hookCore(function (exports) {
+                    exports.prototype._showTip = function (msg) {
+                        this.fire({ type: 'showtip', data: msg });
+                    };
+
+                    exports.prototype.getFPS = function () {
+                        if (self._flvInfo) {
+                            return self._flvInfo.videoConfigTag.sps.frame_rate.fps;
+                        } else {
+                            return 25; // f4v极速以上，动画23.976、电影24、电视剧25。
+                        }
+                    };
+
+                    exports.prototype.previousFrame = function () {
+                        var video = this.video();
+                        var seekTime = Math.max(0, Math.min(this.getDuration(), video.currentTime - 1 / this.getFPS()));
+                        video.currentTime = seekTime;
+                        this._showTip('上一帧');
+                    };
+
+                    exports.prototype.nextFrame = function () {
+                        var video = this.video();
+                        var seekTime = Math.max(0, Math.min(this.getDuration(), video.currentTime + 1 / this.getFPS()));
+                        video.currentTime = seekTime;
+                        this._showTip('下一帧');
+                    };
+
+                    exports.prototype.stepSeek = function (stepTime) {
+                        var seekTime = Math.max(0, Math.min(this.getDuration(), this.getCurrenttime() + stepTime));
+                        var msg = void 0;
+
+                        if (Math.abs(stepTime) < 60) {
+                            msg = stepTime > 0 ? '\u6B65\u8FDB\uFF1A' + stepTime + '\u79D2' : '\u6B65\u9000\uFF1A' + Math.abs(stepTime) + '\u79D2';
+                        } else {
+                            msg = stepTime > 0 ? '\u6B65\u8FDB\uFF1A' + stepTime / 60 + '\u5206\u949F' : '\u6B65\u9000\uFF1A' + Math.abs(stepTime) / 60 + '\u5206\u949F';
+                        }
+                        this._showTip(msg);
+
+                        this.seek(seekTime, true);
+                    };
+
+                    exports.prototype.rangeSeek = function (range) {
+                        var duration = this.getDuration();
+                        var seekTime = Math.max(0, Math.min(duration, duration * range));
+                        this.seek(seekTime, true);
+                        this._showTip('定位：' + (range * 100).toFixed(0) + '%');
+                    };
+
+                    exports.prototype.toggleMute = function () {
+                        if (this.getMuted()) {
+                            this.setMuted(false);
+                            this._showTip('取消静音');
+                        } else {
+                            this.setMuted(true);
+                            this._showTip('静音');
+                        }
+                    };
+
+                    exports.prototype.adjustVolume = function (value) {
+                        var volume = this.getVolume() + value;
+                        volume = Math.max(0, Math.min(1, volume.toFixed(2)));
+                        this.setVolume(volume);
+                        this.fire({ type: 'keyvolumechange' });
+                    };
+
+                    exports.prototype.adjustPlaybackRate = function (value) {
+                        var video = this.video();
+                        var playbackRate = Math.max(0.2, Math.min(5, video.playbackRate + value));
+                        video.playbackRate = playbackRate;
+                        this._showTip('\u64AD\u653E\u901F\u7387\uFF1A' + playbackRate.toFixed(1).replace(/\.0+$/, ''));
+                    };
+
+                    exports.prototype.resetPlaybackRate = function () {
+                        var video = this.video();
+                        video.playbackRate = 1;
+                        this._showTip('恢复播放速率');
+                    };
+
+                    exports.prototype.hasPreVideo = function () {
+                        return this._getVideoIndexInList(this._movieinfo.tvid) > 0 || this._getVideoIndexInList(this._movieinfo.oldTvid) > 0;
+                    };
+
+                    exports.prototype.playNext = function () {
+                        if (this.hasNextVideo()) {
+                            this._showTip('播放下一集');
+                            this.switchNextVideo();
+                        } else {
+                            this._showTip('没有下一集哦');
+                        }
+                    };
+
+                    exports.prototype.playPre = function () {
+                        if (this.hasPreVideo()) {
+                            this._showTip('播放上一集');
+                            this.switchPreVideo();
+                        } else {
+                            this._showTip('没有上一集哦');
+                        }
+                    };
+                });
+            }
+        }, {
+            key: '_patchKeyShortcuts',
+            value: function _patchKeyShortcuts() {
+                Hooker.hookPluginHotKeys(function (exports) {
+                    exports.prototype.init = function () {
+                        document.addEventListener('keydown', this._keydown.bind(this));
+                    };
+
+                    exports.prototype._isValidTarget = function (target) {
+                        return target.nodeName === 'BODY' || target.nodeName == 'VIDEO' || target.classList.contains('pw-video'); // 全局
+                        // return target.nodeName === 'VIDEO' || target.classList.contains('pw-video'); // 非全局
+                    };
+
+                    exports.prototype._keydown = function (event) {
+                        if (!this._isValidTarget(event.target)) return;
+
+                        switch (event.keyCode) {
+                            case 32:
+                                // Spacebar
+                                if (!event.ctrlKey && !event.shiftKey && !event.altKey) {
+                                    if (this.core.isPaused()) {
+                                        this.core.play(true);
+                                        this.core._showTip('播放');
+                                    } else {
+                                        this.core.pause(true);
+                                        this.core._showTip('暂停');
+                                    }
+                                } else {
+                                    return;
+                                }
+                                break;
+                            case 39: // → Arrow Right
+                            case 37:
+                                {
+                                    // ← Arrow Left
+                                    var stepTime = void 0;
+                                    if (!event.ctrlKey && !event.shiftKey && !event.altKey) {
+                                        stepTime = 39 === event.keyCode ? 5 : -5;
+                                    } else if (event.ctrlKey && !event.shiftKey && !event.altKey) {
+                                        stepTime = 39 === event.keyCode ? 30 : -30;
+                                    } else if (!event.ctrlKey && event.shiftKey && !event.altKey) {
+                                        stepTime = 39 === event.keyCode ? 60 : -60;
+                                    } else if (event.ctrlKey && !event.shiftKey && event.altKey) {
+                                        stepTime = 39 === event.keyCode ? 3e2 : -3e2; // 5分钟
+                                    } else {
+                                        return;
+                                    }
+
+                                    this.core.stepSeek(stepTime);
+                                    break;
+                                }
+                            case 38: // ↑ Arrow Up
+                            case 40:
+                                // ↓ Arrow Down
+                                if (!event.ctrlKey && !event.shiftKey && !event.altKey) {
+                                    this.core.adjustVolume(38 === event.keyCode ? 0.05 : -0.05);
+                                } else {
+                                    return;
+                                }
+                                break;
+                            case 77:
+                                // M
+                                if (!event.ctrlKey && !event.shiftKey && !event.altKey) {
+                                    this.core.toggleMute();
+                                } else {
+                                    return;
+                                }
+                                break;
+                            case 13:
+                                // Enter
+                                if (!event.ctrlKey && !event.shiftKey && !event.altKey) {
+                                    this.core.fire({ type: 'togglefullscreen' });
+                                } else if (event.ctrlKey && !event.shiftKey && !event.altKey) {
+                                    this.core.fire({ type: 'togglewebfullscreen' });
+                                } else {
+                                    return;
+                                }
+                                break;
+                            case 67: // C
+                            case 88:
+                                // X
+                                if (!event.ctrlKey && !event.shiftKey && !event.altKey) {
+                                    this.core.adjustPlaybackRate(67 === event.keyCode ? 0.1 : -0.1);
+                                } else {
+                                    return;
+                                }
+                                break;
+                            case 90:
+                                // Z
+                                if (!event.ctrlKey && !event.shiftKey && !event.altKey) {
+                                    this.core.resetPlaybackRate();
+                                } else {
+                                    return;
+                                }
+                                break;
+                            case 68: // D
+                            case 70:
+                                // F
+                                if (!event.ctrlKey && !event.shiftKey && !event.altKey) {
+                                    this.core.pause(true);
+                                    if (event.keyCode === 68) {
+                                        this.core.previousFrame();
+                                    } else {
+                                        this.core.nextFrame();
+                                    }
+                                } else {
+                                    return;
+                                }
+                                break;
+                            case 80: // P
+                            case 78:
+                                // N
+                                if (!event.ctrlKey && event.shiftKey && !event.altKey) {
+                                    if (event.keyCode === 78) {
+                                        this.core.playNext();
+                                    } else {
+                                        this.core.playPre();
+                                    }
+                                } else {
+                                    return;
+                                }
+                                break;
+                            default:
+                                if (event.keyCode >= 48 && event.keyCode <= 57) {
+                                    // 0 ~ 9
+                                    if (!event.ctrlKey && !event.shiftKey && !event.altKey) {
+                                        this.core.rangeSeek((event.keyCode - 48) * 0.1);
+                                    } else {
+                                        return;
+                                    }
+                                } else {
+                                    return;
+                                }
+                        }
+
+                        event.preventDefault();
+                        event.stopPropagation();
+                    };
+
+                    Logger.log('添加键盘快捷键');
+                });
+            }
+        }, {
+            key: '_patchMouseShortcuts',
+            value: function _patchMouseShortcuts() {
+                Hooker.hookPluginControlsInit(function (that) {
+                    document.addEventListener('wheel', function (event) {
+                        if (!Detector.isFullScreen()) return;
+
+                        var delta = event.wheelDelta || event.detail || event.deltaY && -event.deltaY;
+                        that.core.adjustVolume(delta > 0 ? 0.05 : -0.05);
+                    });
+
+                    Logger.log('添加鼠标快捷键');
+                });
+            }
+        }, {
+            key: 'patchShortcuts',
+            value: function patchShortcuts() {
+                this._patchCore();
+
+                this._patchKeyShortcuts();
+                this._patchMouseShortcuts();
+            }
+        }]);
+
+        return Patcher;
     }();
 
     var Switcher = function () {
@@ -902,6 +1336,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         forceHtml5();
         Mocker.mock();
+        Patcher.patchShortcuts();
 
         if (Detector.isInnerFrame()) adapteIframe();
         if (Detector.isOutsite()) replaceFlash();
