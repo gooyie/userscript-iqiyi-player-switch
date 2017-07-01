@@ -14,13 +14,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js
-// @version      1.9.0
+// @version      1.9.1
 // @description  爱奇艺flash播放器与html5播放器随意切换，改善html5播放器播放体验。
 // @author       gooyie
 // @license      MIT License
 //
 // @include      *://*.iqiyi.com/*
 // @include      *://v.baidu.com/*
+// @include      *://music.baidu.com/mv/*
 // @grant        GM_registerMenuCommand
 // @grant        GM_xmlhttpRequest
 // @grant        GM_addStyle
@@ -213,6 +214,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             key: 'isOutsite',
             value: function isOutsite() {
                 return !/\.iqiyi\.com$/.test(location.host);
+            }
+        }, {
+            key: 'hasFlashPlugin',
+            value: function hasFlashPlugin() {
+                var plugins = unsafeWindow.navigator.plugins;
+                return !!(plugins['Shockwave Flash'] && plugins['Shockwave Flash'].description);
             }
         }, {
             key: 'isFullScreen',
@@ -620,6 +627,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 Object.defineProperty(unsafeWindow.navigator, 'userAgent', { get: function get() {
                         return UA_CHROME;
                     } });
+            }
+        }, {
+            key: 'fakeFlashPlugin',
+            value: function fakeFlashPlugin() {
+                var plugin = {
+                    description: 'Shockwave Flash 26.0 r0',
+                    filename: 'pepflashplayer64_26_0_0_131.dll',
+                    length: 0,
+                    name: 'Shockwave Flash'
+                };
+
+                Reflect.setPrototypeOf(plugin, Plugin.prototype);
+                unsafeWindow.navigator.plugins['Shockwave Flash'] = plugin;
             }
         }, {
             key: '_calcSign',
@@ -1141,13 +1161,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         _createClass(Finder, null, [{
             key: 'findVid',
             value: function findVid(text) {
-                var result = /vid=([\da-z]+)/.exec(text);
+                var result = /vid=([\da-z]+)/i.exec(text);
                 return result ? result[1] : null;
             }
         }, {
             key: 'findTvid',
             value: function findTvid(text) {
-                var result = /tvId=(\d+)/.exec(text);
+                var result = /tvid=(\d+)/i.exec(text);
                 return result ? result[1] : null;
             }
         }, {
@@ -1189,6 +1209,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         targetNode.innerHTML = '<div class="' + GM_info.script.name + ' info">\u6B63\u5728\u83B7\u53D6\u89C6\u9891\u6E90...</div>';
 
         getVideoUrl(tvid, vid).then(function (url) {
+            Logger.log('origin url: %s', url);
             targetNode.innerHTML = '<iframe id="innerFrame" src="' + url + '" frameborder="0" allowfullscreen="true" width="100%" height="100%"></iframe>';
         }).catch(function (err) {
             targetNode.innerHTML = '<div class="' + GM_info.script.name + ' error"><p>\u83B7\u53D6\u89C6\u9891\u6E90\u51FA\u9519\uFF01</p><p>' + err.message + '</p></div>';
@@ -1216,13 +1237,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                             var node = _step2.value;
 
                             if (node.nodeName !== 'OBJECT' && node.nodeName !== 'EMBED') continue;
+                            Logger.log('finded node', node);
 
                             var text = node.outerHTML;
                             var vid = Finder.findVid(text);
                             var tvid = Finder.findTvid(text);
 
                             if (tvid && vid) {
-                                Logger.log('finded player', node);
+                                Logger.log('finded tvid: %s, vid: %s', tvid, vid);
                                 embedSrc(node.parentNode, { tvid: tvid, vid: vid });
                                 self.disconnect();
                                 Logger.log('stoped observation');
@@ -1263,7 +1285,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         Logger.log('started observation');
     }
 
-    function adapteIframe() {
+    function adaptIframe() {
         var style = '\n            body[class|="qypage"] {\n                overflow: hidden !important;\n                background: #000 !important;\n                visibility: hidden;\n            }\n\n            .mod-func {\n                display: none !important;\n            }\n\n            .' + GM_info.script.name + '.info {\n                width: 20em;\n                height: 5em;\n                position: absolute;\n                top: 0;\n                bottom: 0;\n                left: 0;\n                right: 0;\n                margin: auto;\n                text-align: center;\n                line-height: 5em;\n                font-size: 1em;\n                color: #ccc;\n            }\n\n            .' + GM_info.script.name + '.error {\n                height: 3em;\n                position: absolute;\n                top: 0;\n                bottom: 0;\n                left: 0;\n                right: 0;\n                margin: auto;\n                text-align: center;\n                font-size: 1em;\n                color: #c00;\n            }\n        ';
 
         GM_addStyle(style);
@@ -1338,8 +1360,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         Mocker.mock();
         Patcher.patchShortcuts();
 
-        if (Detector.isInnerFrame()) adapteIframe();
-        if (Detector.isOutsite()) replaceFlash();
+        if (Detector.isInnerFrame()) adaptIframe();
+        if (Detector.isOutsite()) {
+            if (!Detector.hasFlashPlugin()) Faker.fakeFlashPlugin();
+            replaceFlash();
+        }
     } else {
         forceFlash();
     }

@@ -4,13 +4,14 @@
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js
-// @version      1.9.0
+// @version      1.9.1
 // @description  爱奇艺flash播放器与html5播放器随意切换，改善html5播放器播放体验。
 // @author       gooyie
 // @license      MIT License
 //
 // @include      *://*.iqiyi.com/*
 // @include      *://v.baidu.com/*
+// @include      *://music.baidu.com/mv/*
 // @grant        GM_registerMenuCommand
 // @grant        GM_xmlhttpRequest
 // @grant        GM_addStyle
@@ -142,6 +143,11 @@
 
         static isOutsite() {
             return !/\.iqiyi\.com$/.test(location.host);
+        }
+
+        static hasFlashPlugin() {
+            const plugins = unsafeWindow.navigator.plugins;
+            return !!(plugins['Shockwave Flash'] && plugins['Shockwave Flash'].description);
         }
 
         static isFullScreen() {
@@ -346,6 +352,18 @@
         static fakeChrome() {
             const UA_CHROME = 'chrome';
             Object.defineProperty(unsafeWindow.navigator, 'userAgent', {get: () => UA_CHROME});
+        }
+
+        static fakeFlashPlugin() {
+            let plugin = {
+                description: 'Shockwave Flash 26.0 r0',
+                filename: 'pepflashplayer64_26_0_0_131.dll',
+                length: 0,
+                name: 'Shockwave Flash',
+            };
+
+            Reflect.setPrototypeOf(plugin, Plugin.prototype);
+            unsafeWindow.navigator.plugins['Shockwave Flash'] = plugin;
         }
 
         static _calcSign(authcookie) {
@@ -793,12 +811,12 @@
     class Finder {
 
         static findVid(text) {
-            let result = /vid=([\da-z]+)/.exec(text);
+            let result = /vid=([\da-z]+)/i.exec(text);
             return result ? result[1] : null;
         }
 
         static findTvid(text) {
-            let result = /tvId=(\d+)/.exec(text);
+            let result = /tvid=(\d+)/i.exec(text);
             return result ? result[1] : null;
         }
 
@@ -834,6 +852,7 @@
         targetNode.innerHTML = `<div class="${GM_info.script.name} info">正在获取视频源...</div>`;
 
         getVideoUrl(tvid, vid).then((url) => {
+            Logger.log('origin url: %s', url);
             targetNode.innerHTML = `<iframe id="innerFrame" src="${url}" frameborder="0" allowfullscreen="true" width="100%" height="100%"></iframe>`;
         }).catch((err) => {
             targetNode.innerHTML = `<div class="${GM_info.script.name} error"><p>获取视频源出错！</p><p>${err.message}</p></div>`;
@@ -847,13 +866,14 @@
 
                 for (let node of record.addedNodes) {
                     if (node.nodeName !== 'OBJECT' && node.nodeName !== 'EMBED') continue;
+                    Logger.log('finded node', node);
 
                     let text = node.outerHTML;
                     let vid = Finder.findVid(text);
                     let tvid = Finder.findTvid(text);
 
                     if (tvid && vid) {
-                        Logger.log('finded player', node);
+                        Logger.log('finded tvid: %s, vid: %s', tvid, vid);
                         embedSrc(node.parentNode, {tvid, vid});
                         self.disconnect();
                         Logger.log('stoped observation');
@@ -866,7 +886,7 @@
         Logger.log('started observation');
     }
 
-    function adapteIframe() {
+    function adaptIframe() {
         let style = `
             body[class|="qypage"] {
                 overflow: hidden !important;
@@ -970,8 +990,11 @@
         Mocker.mock();
         Patcher.patchShortcuts();
 
-        if (Detector.isInnerFrame()) adapteIframe();
-        if (Detector.isOutsite()) replaceFlash();
+        if (Detector.isInnerFrame()) adaptIframe();
+        if (Detector.isOutsite()) {
+            if (!Detector.hasFlashPlugin()) Faker.fakeFlashPlugin();
+            replaceFlash();
+        }
     } else {
         forceFlash();
     }
