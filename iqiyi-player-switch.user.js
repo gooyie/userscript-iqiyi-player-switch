@@ -4,7 +4,7 @@
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/iqiyi-player-switch.user.js
-// @version      1.9.1
+// @version      1.9.2
 // @description  爱奇艺flash播放器与html5播放器随意切换，改善html5播放器播放体验。
 // @author       gooyie
 // @license      MIT License
@@ -568,6 +568,13 @@
                     let seekTime = Math.max(0, Math.min(this.getDuration(), video.currentTime + 1 / this.getFPS()));
                     video.currentTime = seekTime;
                     this._showTip('下一帧');
+                };
+
+                exports.prototype.seek = function(...args) {
+                    const video = this.video();
+                    const playbackRate = video.playbackRate;
+                    this._engine.seek(...args);
+                    video.playbackRate = playbackRate;
                 };
 
                 exports.prototype.stepSeek = function(stepTime) {
