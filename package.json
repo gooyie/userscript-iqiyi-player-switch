@@ -1,12 +1,19 @@
 {
   "name": "iqiyi-player-switch",
-  "version": "1.9.2",
+  "version": "1.10.0",
   "description": "爱奇艺flash播放器与html5播放器随意切换，改善html5播放器播放体验。",
-  "main": "iqiyi-player-switch.user.js",
+  "main": "src/index.js",
   "scripts": {
-    "lint": "eslint iqiyi-player-switch.user.js",
-    "prebuild": "npm run lint",
-    "build": "babel iqiyi-player-switch.user.js -o iqiyi-player-switch.dist.user.js",
+    "lint": "eslint src",
+    "fix": "eslint src --fix",
+    "clean": "node scripts/clean",
+    "concat": "node scripts/concat",
+    "prewatch": "npm run clean",
+    "watch": "webpack --watch -d",
+    "dev": "npm run watch",
+    "prebuild": "npm run clean",
+    "build": "webpack --define process.env.NODE_ENV='production'",
+    "postbuild": "npm run concat",
     "precommit": "npm run lint"
   },
   "repository": {
@@ -28,8 +35,21 @@
   "homepage": "https://github.com/gooyie/userscript-iqiyi-player-switch#readme",
   "devDependencies": {
     "babel-cli": "^6.24.1",
+    "babel-eslint": "^7.2.3",
+    "babel-loader": "^7.1.1",
+    "babel-plugin-transform-async-to-generator": "^6.24.1",
+    "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-es2015": "^6.24.1",
     "eslint": "^3.19.0",
-    "husky": "^0.13.4"
+    "eslint-loader": "^1.8.0",
+    "fs-extra": "^3.0.1",
+    "husky": "^0.13.4",
+    "webpack": "^3.0.0"
+  },
+  "dependencies": {
+    "blueimp-md5": "^2.7.0",
+    "fetch-readablestream": "git+https://github.com/gooyie/fetch-readablestream.git#dev",
+    "web-streams-polyfill": "^1.3.2",
+    "webrtc-adapter": "^4.1.0"
   }
 }
