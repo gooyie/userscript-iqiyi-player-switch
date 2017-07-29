@@ -5,7 +5,8 @@ import Logger from './logger';
 import Detector from './detector';
 
 function isVideoReq(url) {
-    return /^https?:\/\/(?:\d+.?){4}\/videos\/v.*$/.test(url);
+    const u = new URL(url);
+    return u.pathname.startsWith('/videos/') && u.pathname.endsWith('.f4v');
 }
 
 if (Detector.isFirefox()) {
