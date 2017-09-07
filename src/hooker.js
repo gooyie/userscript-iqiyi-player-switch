@@ -19,20 +19,20 @@ class Hooker {
         };
     }
 
-    static _isFactoryCall(args) { // module.exports, module, module.exports, require
+    static _isModuleCall(args) { // module.exports, module, module.exports, require
         return args.length === 4 && args[1] instanceof Object && args[1].hasOwnProperty('exports');
     }
 
-    static hookFactoryCall(cb = ()=>{}) {
-        this.hookCall((...args) => {if (this._isFactoryCall(args)) cb(...args);});
+    static hookModuleCall(cb = ()=>{}) {
+        this.hookCall((...args) => {if (this._isModuleCall(args)) cb(...args);});
     }
 
-    static _isJqueryFactoryCall(exports) {
+    static _isJqueryModuleCall(exports) {
         return exports.hasOwnProperty('fn') && exports.fn.hasOwnProperty('jquery');
     }
 
     static hookJquery(cb = ()=>{}) {
-        this.hookFactoryCall((...args) => {if (this._isJqueryFactoryCall(args[1].exports)) cb(args[1].exports);});
+        this.hookModuleCall((...args) => {if (this._isJqueryModuleCall(args[1].exports)) cb(args[1].exports);});
     }
 
     static hookJqueryAjax(cb = ()=>{}) {
@@ -52,12 +52,12 @@ class Hooker {
         });
     }
 
-    static _isHttpFactoryCall(exports = {}) {
+    static _isHttpModuleCall(exports = {}) {
         return exports.hasOwnProperty('jsonp') && exports.hasOwnProperty('ajax');
     }
 
     static hookHttp(cb = ()=>{}) {
-        this.hookFactoryCall((...args) => {if (this._isHttpFactoryCall(args[1].exports)) cb(args[1].exports);});
+        this.hookModuleCall((...args) => {if (this._isHttpModuleCall(args[1].exports)) cb(args[1].exports);});
     }
 
     static hookHttpJsonp(cb = ()=>{}) {
@@ -72,28 +72,28 @@ class Hooker {
         });
     }
 
-    static _isLogoFactoryCall(exports = {}) {
+    static _isLogoModuleCall(exports = {}) {
         return 'function' === typeof exports && exports.prototype.hasOwnProperty('showLogo');
     }
 
     static hookLogo(cb = ()=>{}) {
-        this.hookFactoryCall((...args) => {if (this._isLogoFactoryCall(args[1].exports)) cb(args[1].exports);});
+        this.hookModuleCall((...args) => {if (this._isLogoModuleCall(args[1].exports)) cb(args[1].exports);});
     }
 
-    static _isFullScreenFactoryCall(exports = {}) {
+    static _isFullScreenModuleCall(exports = {}) {
         return exports.__proto__ && exports.__proto__.hasOwnProperty('isFullScreen');
     }
 
     static hookFullScreen(cb = ()=>{}) {
-        this.hookFactoryCall((...args) => {if (this._isFullScreenFactoryCall(args[1].exports)) cb(args[1].exports);});
+        this.hookModuleCall((...args) => {if (this._isFullScreenModuleCall(args[1].exports)) cb(args[1].exports);});
     }
 
-    static _isWebFullScreenFactoryCall(exports = {}) {
+    static _isWebFullScreenModuleCall(exports = {}) {
         return exports.__proto__ && exports.__proto__.hasOwnProperty('isWebFullScreen');
     }
 
     static hookWebFullScreen(cb = ()=>{}) {
-        this.hookFactoryCall((...args) => {if (this._isWebFullScreenFactoryCall(args[1].exports)) cb(args[1].exports);});
+        this.hookModuleCall((...args) => {if (this._isWebFullScreenModuleCall(args[1].exports)) cb(args[1].exports);});
     }
 
     static hookWebFullScreenInit(cb = ()=>{}) {
@@ -106,12 +106,12 @@ class Hooker {
         });
     }
 
-    static _isPluginControlsFactoryCall(exports = {}) {
+    static _isPluginControlsModuleCall(exports = {}) {
         return 'function' === typeof exports && exports.prototype.hasOwnProperty('initFullScreen');
     }
 
     static hookPluginControls(cb = ()=>{}) {
-        this.hookFactoryCall((...args) => {if (this._isPluginControlsFactoryCall(args[1].exports)) cb(args[1].exports);});
+        this.hookModuleCall((...args) => {if (this._isPluginControlsModuleCall(args[1].exports)) cb(args[1].exports);});
     }
 
     static hookPluginControlsInit(cb = ()=>{}) {
@@ -134,38 +134,38 @@ class Hooker {
         });
     }
 
-    static _isCoreFactoryCall(exports = {}) {
+    static _isCoreModuleCall(exports = {}) {
         return 'function' === typeof exports &&
                 exports.prototype.hasOwnProperty('getdefaultvds') &&
                 exports.prototype.hasOwnProperty('getMovieInfo');
     }
 
     static hookCore(cb = ()=>{}) {
-        this.hookFactoryCall((...args) => {if (this._isCoreFactoryCall(args[1].exports)) cb(args[1].exports);});
+        this.hookModuleCall((...args) => {if (this._isCoreModuleCall(args[1].exports)) cb(args[1].exports);});
     }
 
-    static _isSkinBaseFactoryCall(exports = {}) {
+    static _isSkinBaseModuleCall(exports = {}) {
         return 'function' === typeof exports && exports.prototype.hasOwnProperty('_checkPlugin');
     }
 
     static hookSkinBase(cb = ()=>{}) {
-        this.hookFactoryCall((...args) => {if (this._isSkinBaseFactoryCall(args[1].exports)) cb(args[1].exports);});
+        this.hookModuleCall((...args) => {if (this._isSkinBaseModuleCall(args[1].exports)) cb(args[1].exports);});
     }
 
-    static _isPluginHotKeysFactoryCall(exports = {}) {
+    static _isPluginHotKeysModuleCall(exports = {}) {
         return 'function' === typeof exports && exports.prototype.hasOwnProperty('_keydown');
     }
 
     static hookPluginHotKeys(cb = ()=>{}) {
-        this.hookFactoryCall((...args) => {if (this._isPluginHotKeysFactoryCall(args[1].exports)) cb(args[1].exports);});
+        this.hookModuleCall((...args) => {if (this._isPluginHotKeysModuleCall(args[1].exports)) cb(args[1].exports);});
     }
 
-    static _isFragmentFactoryCall(exports = {}) {
+    static _isFragmentModuleCall(exports = {}) {
         return 'function' === typeof exports && exports.prototype.hasOwnProperty('parseData');
     }
 
     static hookFragment(cb = ()=>{}) {
-        this.hookFactoryCall((...args) => {if (this._isFragmentFactoryCall(args[1].exports)) cb(args[1].exports);});
+        this.hookModuleCall((...args) => {if (this._isFragmentModuleCall(args[1].exports)) cb(args[1].exports);});
     }
 
     static hookParseData(cb = ()=>{}) {
