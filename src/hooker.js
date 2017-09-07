@@ -2,29 +2,52 @@ import Logger from './logger';
 
 class Hooker {
 
-    static hookCall(cb = ()=>{}) {
+    static _hookCall(cb) {
         const call = Function.prototype.call;
         Function.prototype.call = function(...args) {
             let ret = call.apply(this, args);
             try {
-                if (args) cb(...args);
+                if (args && cb(args)) {
+                    Function.prototype.call = call;
+                    cb = () => {};
+                    Logger.log('restored call');
+                }
             } catch (err) {
                 Logger.error(err.stack);
             }
             return ret;
         };
-
-        Function.prototype.call.toString = Function.prototype.call.toLocaleString = function() {
-            return 'function call() { [native code] }';
-        };
+        this._hookCall = null;
     }
 
     static _isModuleCall(args) { // module.exports, module, module.exports, require
-        return args.length === 4 && args[1] instanceof Object && args[1].hasOwnProperty('exports');
+        return args.length === 4 && args[1] && Object.getPrototypeOf(args[1]) === Object.prototype && args[1].hasOwnProperty('exports');
     }
 
-    static hookModuleCall(cb = ()=>{}) {
-        this.hookCall((...args) => {if (this._isModuleCall(args)) cb(...args);});
+    static _hookModuleCall(cb, pred) {
+        const callbacksMap = new Map([[pred, [cb]]]);
+        this._hookCall((args) => {
+            if (!this._isModuleCall(args)) return;
+
+            const exports = args[1].exports;
+            for (const [pred, callbacks] of callbacksMap) {
+                if (!pred.apply(this, [exports])) continue;
+                callbacks.forEach(cb => cb(exports, args));
+                callbacksMap.delete(pred);
+                !callbacksMap.size && (this._hookModuleCall = null);
+                break;
+            }
+
+            return !callbacksMap.size;
+        });
+
+        this._hookModuleCall = (cb, pred) => {
+            if (callbacksMap.has(pred)) {
+                callbacksMap.get(pred).push(cb);
+            } else {
+                callbacksMap.set(pred, [cb]);
+            }
+        };
     }
 
     static _isJqueryModuleCall(exports) {
@@ -32,38 +55,34 @@ class Hooker {
     }
 
     static hookJquery(cb = ()=>{}) {
-        this.hookModuleCall((...args) => {if (this._isJqueryModuleCall(args[1].exports)) cb(args[1].exports);});
+        this._hookModuleCall(cb, this._isJqueryModuleCall);
     }
 
-    static hookJqueryAjax(cb = ()=>{}) {
+    static hookJqueryAjax(cb) {
         this.hookJquery((exports) => {
             const ajax = exports.ajax.bind(exports);
-
             exports.ajax = function(url, options = {}) {
                 if (typeof url === 'object') {
                     [url, options] = [url.url, url];
                 }
-
                 let isHijacked = cb(url, options);
                 if (isHijacked) return;
-
                 return ajax(url, options);
             };
         });
     }
 
-    static _isHttpModuleCall(exports = {}) {
+    static _isHttpModuleCall(exports) {
         return exports.hasOwnProperty('jsonp') && exports.hasOwnProperty('ajax');
     }
 
-    static hookHttp(cb = ()=>{}) {
-        this.hookModuleCall((...args) => {if (this._isHttpModuleCall(args[1].exports)) cb(args[1].exports);});
+    static hookHttp(cb) {
+        this._hookModuleCall(cb, this._isHttpModuleCall);
     }
 
-    static hookHttpJsonp(cb = ()=>{}) {
+    static hookHttpJsonp(cb) {
         this.hookHttp((exports) => {
             const jsonp = exports.jsonp.bind(exports);
-
             exports.jsonp = function(options) {
                 let isHijacked = cb(options);
                 if (isHijacked) return;
@@ -72,31 +91,31 @@ class Hooker {
         });
     }
 
-    static _isLogoModuleCall(exports = {}) {
+    static _isLogoModuleCall(exports) {
         return 'function' === typeof exports && exports.prototype.hasOwnProperty('showLogo');
     }
 
-    static hookLogo(cb = ()=>{}) {
-        this.hookModuleCall((...args) => {if (this._isLogoModuleCall(args[1].exports)) cb(args[1].exports);});
+    static hookLogo(cb) {
+        this._hookModuleCall(cb, this._isLogoModuleCall);
     }
 
-    static _isFullScreenModuleCall(exports = {}) {
+    static _isFullScreenModuleCall(exports) {
         return exports.__proto__ && exports.__proto__.hasOwnProperty('isFullScreen');
     }
 
-    static hookFullScreen(cb = ()=>{}) {
-        this.hookModuleCall((...args) => {if (this._isFullScreenModuleCall(args[1].exports)) cb(args[1].exports);});
+    static hookFullScreen(cb) {
+        this._hookModuleCall(cb, this._isFullScreenModuleCall);
     }
 
-    static _isWebFullScreenModuleCall(exports = {}) {
+    static _isWebFullScreenModuleCall(exports) {
         return exports.__proto__ && exports.__proto__.hasOwnProperty('isWebFullScreen');
     }
 
-    static hookWebFullScreen(cb = ()=>{}) {
-        this.hookModuleCall((...args) => {if (this._isWebFullScreenModuleCall(args[1].exports)) cb(args[1].exports);});
+    static hookWebFullScreen(cb) {
+        this._hookModuleCall(cb, this._isWebFullScreenModuleCall);
     }
 
-    static hookWebFullScreenInit(cb = ()=>{}) {
+    static hookWebFullScreenInit(cb) {
         this.hookWebFullScreen((exports) => {
             const init = exports.__proto__.init;
             exports.__proto__.init = function(wrapper, btn) {
@@ -106,15 +125,15 @@ class Hooker {
         });
     }
 
-    static _isPluginControlsModuleCall(exports = {}) {
+    static _isPluginControlsModuleCall(exports) {
         return 'function' === typeof exports && exports.prototype.hasOwnProperty('initFullScreen');
     }
 
-    static hookPluginControls(cb = ()=>{}) {
-        this.hookModuleCall((...args) => {if (this._isPluginControlsModuleCall(args[1].exports)) cb(args[1].exports);});
+    static hookPluginControls(cb) {
+        this._hookModuleCall(cb, this._isPluginControlsModuleCall);
     }
 
-    static hookPluginControlsInit(cb = ()=>{}) {
+    static hookPluginControlsInit(cb) {
         this.hookPluginControls((exports) => {
             const init = exports.prototype.init;
             exports.prototype.init = function() {
@@ -124,7 +143,7 @@ class Hooker {
         });
     }
 
-    static hookInitFullScreen(cb = ()=>{}) {
+    static hookInitFullScreen(cb) {
         this.hookPluginControls((exports) => {
             const initFullScreen = exports.prototype.initFullScreen;
             exports.prototype.initFullScreen = function() {
@@ -134,41 +153,41 @@ class Hooker {
         });
     }
 
-    static _isCoreModuleCall(exports = {}) {
+    static _isCoreModuleCall(exports) {
         return 'function' === typeof exports &&
                 exports.prototype.hasOwnProperty('getdefaultvds') &&
                 exports.prototype.hasOwnProperty('getMovieInfo');
     }
 
-    static hookCore(cb = ()=>{}) {
-        this.hookModuleCall((...args) => {if (this._isCoreModuleCall(args[1].exports)) cb(args[1].exports);});
+    static hookCore(cb) {
+        this._hookModuleCall(cb, this._isCoreModuleCall);
     }
 
-    static _isSkinBaseModuleCall(exports = {}) {
+    static _isSkinBaseModuleCall(exports) {
         return 'function' === typeof exports && exports.prototype.hasOwnProperty('_checkPlugin');
     }
 
-    static hookSkinBase(cb = ()=>{}) {
-        this.hookModuleCall((...args) => {if (this._isSkinBaseModuleCall(args[1].exports)) cb(args[1].exports);});
+    static hookSkinBase(cb) {
+        this._hookModuleCall(cb, this._isSkinBaseModuleCall);
     }
 
-    static _isPluginHotKeysModuleCall(exports = {}) {
+    static _isPluginHotKeysModuleCall(exports) {
         return 'function' === typeof exports && exports.prototype.hasOwnProperty('_keydown');
     }
 
-    static hookPluginHotKeys(cb = ()=>{}) {
-        this.hookModuleCall((...args) => {if (this._isPluginHotKeysModuleCall(args[1].exports)) cb(args[1].exports);});
+    static hookPluginHotKeys(cb) {
+        this._hookModuleCall(cb, this._isPluginHotKeysModuleCall);
     }
 
-    static _isFragmentModuleCall(exports = {}) {
+    static _isFragmentModuleCall(exports) {
         return 'function' === typeof exports && exports.prototype.hasOwnProperty('parseData');
     }
 
-    static hookFragment(cb = ()=>{}) {
-        this.hookModuleCall((...args) => {if (this._isFragmentModuleCall(args[1].exports)) cb(args[1].exports);});
+    static hookFragment(cb) {
+        this._hookModuleCall(cb, this._isFragmentModuleCall);
     }
 
-    static hookParseData(cb = ()=>{}) {
+    static hookParseData(cb) {
         this.hookFragment((exports) => {
             const parseData = exports.prototype.parseData;
             exports.prototype.parseData = function(...args) {
