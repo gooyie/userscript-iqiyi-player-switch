@@ -4,7 +4,7 @@
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/dist/iqiyi-player-switch.user.js
-// @version      1.10.3
+// @version      1.11.0
 // @description  爱奇艺flash播放器与html5播放器随意切换，改善html5播放器播放体验。
 // @author       gooyie
 // @license      MIT License
@@ -569,6 +569,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _logger = __webpack_require__(1);
@@ -585,10 +587,8 @@ var Hooker = function () {
     }
 
     _createClass(Hooker, null, [{
-        key: 'hookCall',
-        value: function hookCall() {
-            var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
-
+        key: '_hookCall',
+        value: function _hookCall(cb) {
             var call = Function.prototype.call;
             Function.prototype.call = function () {
                 for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
@@ -597,66 +597,95 @@ var Hooker = function () {
 
                 var ret = call.apply(this, args);
                 try {
-                    if (args) cb.apply(undefined, args);
+                    if (args && cb(args)) {
+                        Function.prototype.call = call;
+                        cb = function cb() {};
+                        _logger2.default.log('restored call');
+                    }
                 } catch (err) {
                     _logger2.default.error(err.stack);
                 }
                 return ret;
             };
+            this._hookCall = null;
+        }
+    }, {
+        key: '_isModuleCall',
+        value: function _isModuleCall(args) {
+            // module.exports, module, module.exports, require
+            return args.length === 4 && args[1] && Object.getPrototypeOf(args[1]) === Object.prototype && args[1].hasOwnProperty('exports');
+        }
+    }, {
+        key: '_hookModuleCall',
+        value: function _hookModuleCall(cb, pred) {
+            var _this = this;
 
-            Function.prototype.call.toString = Function.prototype.call.toLocaleString = function () {
-                return 'function call() { [native code] }';
+            var callbacksMap = new Map([[pred, [cb]]]);
+            this._hookCall(function (args) {
+                if (!_this._isModuleCall(args)) return;
+
+                var exports = args[1].exports;
+                var _iteratorNormalCompletion = true;
+                var _didIteratorError = false;
+                var _iteratorError = undefined;
+
+                try {
+                    for (var _iterator = callbacksMap[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                        var _step$value = _slicedToArray(_step.value, 2),
+                            _pred = _step$value[0],
+                            callbacks = _step$value[1];
+
+                        if (!_pred.apply(_this, [exports])) continue;
+                        callbacks.forEach(function (cb) {
+                            return cb(exports, args);
+                        });
+                        callbacksMap.delete(_pred);
+                        !callbacksMap.size && (_this._hookModuleCall = null);
+                        break;
+                    }
+                } catch (err) {
+                    _didIteratorError = true;
+                    _iteratorError = err;
+                } finally {
+                    try {
+                        if (!_iteratorNormalCompletion && _iterator.return) {
+                            _iterator.return();
+                        }
+                    } finally {
+                        if (_didIteratorError) {
+                            throw _iteratorError;
+                        }
+                    }
+                }
+
+                return !callbacksMap.size;
+            });
+
+            this._hookModuleCall = function (cb, pred) {
+                if (callbacksMap.has(pred)) {
+                    callbacksMap.get(pred).push(cb);
+                } else {
+                    callbacksMap.set(pred, [cb]);
+                }
             };
         }
     }, {
-        key: '_isFactoryCall',
-        value: function _isFactoryCall(args) {
-            // module.exports, module, module.exports, require
-            return args.length === 4 && args[1] instanceof Object && args[1].hasOwnProperty('exports');
-        }
-    }, {
-        key: 'hookFactoryCall',
-        value: function hookFactoryCall() {
-            var _this = this;
-
-            var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
-
-            this.hookCall(function () {
-                for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-                    args[_key2] = arguments[_key2];
-                }
-
-                if (_this._isFactoryCall(args)) cb.apply(undefined, args);
-            });
-        }
-    }, {
-        key: '_isJqueryFactoryCall',
-        value: function _isJqueryFactoryCall(exports) {
+        key: '_isJqueryModuleCall',
+        value: function _isJqueryModuleCall(exports) {
             return exports.hasOwnProperty('fn') && exports.fn.hasOwnProperty('jquery');
         }
     }, {
         key: 'hookJquery',
         value: function hookJquery() {
-            var _this2 = this;
-
             var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
 
-            this.hookFactoryCall(function () {
-                for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-                    args[_key3] = arguments[_key3];
-                }
-
-                if (_this2._isJqueryFactoryCall(args[1].exports)) cb(args[1].exports);
-            });
+            this._hookModuleCall(cb, this._isJqueryModuleCall);
         }
     }, {
         key: 'hookJqueryAjax',
-        value: function hookJqueryAjax() {
-            var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
-
+        value: function hookJqueryAjax(cb) {
             this.hookJquery(function (exports) {
                 var ajax = exports.ajax.bind(exports);
-
                 exports.ajax = function (url) {
                     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
@@ -665,44 +694,27 @@ var Hooker = function () {
                         url = _ref[0];
                         options = _ref[1];
                     }
-
                     var isHijacked = cb(url, options);
                     if (isHijacked) return;
-
                     return ajax(url, options);
                 };
             });
         }
     }, {
-        key: '_isHttpFactoryCall',
-        value: function _isHttpFactoryCall() {
-            var exports = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
+        key: '_isHttpModuleCall',
+        value: function _isHttpModuleCall(exports) {
             return exports.hasOwnProperty('jsonp') && exports.hasOwnProperty('ajax');
         }
     }, {
         key: 'hookHttp',
-        value: function hookHttp() {
-            var _this3 = this;
-
-            var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
-
-            this.hookFactoryCall(function () {
-                for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-                    args[_key4] = arguments[_key4];
-                }
-
-                if (_this3._isHttpFactoryCall(args[1].exports)) cb(args[1].exports);
-            });
+        value: function hookHttp(cb) {
+            this._hookModuleCall(cb, this._isHttpModuleCall);
         }
     }, {
         key: 'hookHttpJsonp',
-        value: function hookHttpJsonp() {
-            var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
-
+        value: function hookHttpJsonp(cb) {
             this.hookHttp(function (exports) {
                 var jsonp = exports.jsonp.bind(exports);
-
                 exports.jsonp = function (options) {
                     var isHijacked = cb(options);
                     if (isHijacked) return;
@@ -711,76 +723,38 @@ var Hooker = function () {
             });
         }
     }, {
-        key: '_isLogoFactoryCall',
-        value: function _isLogoFactoryCall() {
-            var exports = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
+        key: '_isLogoModuleCall',
+        value: function _isLogoModuleCall(exports) {
             return 'function' === typeof exports && exports.prototype.hasOwnProperty('showLogo');
         }
     }, {
         key: 'hookLogo',
-        value: function hookLogo() {
-            var _this4 = this;
-
-            var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
-
-            this.hookFactoryCall(function () {
-                for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-                    args[_key5] = arguments[_key5];
-                }
-
-                if (_this4._isLogoFactoryCall(args[1].exports)) cb(args[1].exports);
-            });
+        value: function hookLogo(cb) {
+            this._hookModuleCall(cb, this._isLogoModuleCall);
         }
     }, {
-        key: '_isFullScreenFactoryCall',
-        value: function _isFullScreenFactoryCall() {
-            var exports = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
+        key: '_isFullScreenModuleCall',
+        value: function _isFullScreenModuleCall(exports) {
             return exports.__proto__ && exports.__proto__.hasOwnProperty('isFullScreen');
         }
     }, {
         key: 'hookFullScreen',
-        value: function hookFullScreen() {
-            var _this5 = this;
-
-            var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
-
-            this.hookFactoryCall(function () {
-                for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-                    args[_key6] = arguments[_key6];
-                }
-
-                if (_this5._isFullScreenFactoryCall(args[1].exports)) cb(args[1].exports);
-            });
+        value: function hookFullScreen(cb) {
+            this._hookModuleCall(cb, this._isFullScreenModuleCall);
         }
     }, {
-        key: '_isWebFullScreenFactoryCall',
-        value: function _isWebFullScreenFactoryCall() {
-            var exports = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
+        key: '_isWebFullScreenModuleCall',
+        value: function _isWebFullScreenModuleCall(exports) {
             return exports.__proto__ && exports.__proto__.hasOwnProperty('isWebFullScreen');
         }
     }, {
         key: 'hookWebFullScreen',
-        value: function hookWebFullScreen() {
-            var _this6 = this;
-
-            var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
-
-            this.hookFactoryCall(function () {
-                for (var _len7 = arguments.length, args = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-                    args[_key7] = arguments[_key7];
-                }
-
-                if (_this6._isWebFullScreenFactoryCall(args[1].exports)) cb(args[1].exports);
-            });
+        value: function hookWebFullScreen(cb) {
+            this._hookModuleCall(cb, this._isWebFullScreenModuleCall);
         }
     }, {
         key: 'hookWebFullScreenInit',
-        value: function hookWebFullScreenInit() {
-            var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
-
+        value: function hookWebFullScreenInit(cb) {
             this.hookWebFullScreen(function (exports) {
                 var init = exports.__proto__.init;
                 exports.__proto__.init = function (wrapper, btn) {
@@ -790,32 +764,18 @@ var Hooker = function () {
             });
         }
     }, {
-        key: '_isPluginControlsFactoryCall',
-        value: function _isPluginControlsFactoryCall() {
-            var exports = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
+        key: '_isPluginControlsModuleCall',
+        value: function _isPluginControlsModuleCall(exports) {
             return 'function' === typeof exports && exports.prototype.hasOwnProperty('initFullScreen');
         }
     }, {
         key: 'hookPluginControls',
-        value: function hookPluginControls() {
-            var _this7 = this;
-
-            var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
-
-            this.hookFactoryCall(function () {
-                for (var _len8 = arguments.length, args = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
-                    args[_key8] = arguments[_key8];
-                }
-
-                if (_this7._isPluginControlsFactoryCall(args[1].exports)) cb(args[1].exports);
-            });
+        value: function hookPluginControls(cb) {
+            this._hookModuleCall(cb, this._isPluginControlsModuleCall);
         }
     }, {
         key: 'hookPluginControlsInit',
-        value: function hookPluginControlsInit() {
-            var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
-
+        value: function hookPluginControlsInit(cb) {
             this.hookPluginControls(function (exports) {
                 var init = exports.prototype.init;
                 exports.prototype.init = function () {
@@ -826,9 +786,7 @@ var Hooker = function () {
         }
     }, {
         key: 'hookInitFullScreen',
-        value: function hookInitFullScreen() {
-            var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
-
+        value: function hookInitFullScreen(cb) {
             this.hookPluginControls(function (exports) {
                 var initFullScreen = exports.prototype.initFullScreen;
                 exports.prototype.initFullScreen = function () {
@@ -838,103 +796,53 @@ var Hooker = function () {
             });
         }
     }, {
-        key: '_isCoreFactoryCall',
-        value: function _isCoreFactoryCall() {
-            var exports = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
+        key: '_isCoreModuleCall',
+        value: function _isCoreModuleCall(exports) {
             return 'function' === typeof exports && exports.prototype.hasOwnProperty('getdefaultvds') && exports.prototype.hasOwnProperty('getMovieInfo');
         }
     }, {
         key: 'hookCore',
-        value: function hookCore() {
-            var _this8 = this;
-
-            var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
-
-            this.hookFactoryCall(function () {
-                for (var _len9 = arguments.length, args = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
-                    args[_key9] = arguments[_key9];
-                }
-
-                if (_this8._isCoreFactoryCall(args[1].exports)) cb(args[1].exports);
-            });
+        value: function hookCore(cb) {
+            this._hookModuleCall(cb, this._isCoreModuleCall);
         }
     }, {
-        key: '_isSkinBaseFactoryCall',
-        value: function _isSkinBaseFactoryCall() {
-            var exports = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
+        key: '_isSkinBaseModuleCall',
+        value: function _isSkinBaseModuleCall(exports) {
             return 'function' === typeof exports && exports.prototype.hasOwnProperty('_checkPlugin');
         }
     }, {
         key: 'hookSkinBase',
-        value: function hookSkinBase() {
-            var _this9 = this;
-
-            var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
-
-            this.hookFactoryCall(function () {
-                for (var _len10 = arguments.length, args = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
-                    args[_key10] = arguments[_key10];
-                }
-
-                if (_this9._isSkinBaseFactoryCall(args[1].exports)) cb(args[1].exports);
-            });
+        value: function hookSkinBase(cb) {
+            this._hookModuleCall(cb, this._isSkinBaseModuleCall);
         }
     }, {
-        key: '_isPluginHotKeysFactoryCall',
-        value: function _isPluginHotKeysFactoryCall() {
-            var exports = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
+        key: '_isPluginHotKeysModuleCall',
+        value: function _isPluginHotKeysModuleCall(exports) {
             return 'function' === typeof exports && exports.prototype.hasOwnProperty('_keydown');
         }
     }, {
         key: 'hookPluginHotKeys',
-        value: function hookPluginHotKeys() {
-            var _this10 = this;
-
-            var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
-
-            this.hookFactoryCall(function () {
-                for (var _len11 = arguments.length, args = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
-                    args[_key11] = arguments[_key11];
-                }
-
-                if (_this10._isPluginHotKeysFactoryCall(args[1].exports)) cb(args[1].exports);
-            });
+        value: function hookPluginHotKeys(cb) {
+            this._hookModuleCall(cb, this._isPluginHotKeysModuleCall);
         }
     }, {
-        key: '_isFragmentFactoryCall',
-        value: function _isFragmentFactoryCall() {
-            var exports = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
+        key: '_isFragmentModuleCall',
+        value: function _isFragmentModuleCall(exports) {
             return 'function' === typeof exports && exports.prototype.hasOwnProperty('parseData');
         }
     }, {
         key: 'hookFragment',
-        value: function hookFragment() {
-            var _this11 = this;
-
-            var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
-
-            this.hookFactoryCall(function () {
-                for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
-                    args[_key12] = arguments[_key12];
-                }
-
-                if (_this11._isFragmentFactoryCall(args[1].exports)) cb(args[1].exports);
-            });
+        value: function hookFragment(cb) {
+            this._hookModuleCall(cb, this._isFragmentModuleCall);
         }
     }, {
         key: 'hookParseData',
-        value: function hookParseData() {
-            var cb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
-
+        value: function hookParseData(cb) {
             this.hookFragment(function (exports) {
                 var parseData = exports.prototype.parseData;
                 exports.prototype.parseData = function () {
-                    for (var _len13 = arguments.length, args = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
-                        args[_key13] = arguments[_key13];
+                    for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                        args[_key2] = arguments[_key2];
                     }
 
                     parseData.apply(this, args);
