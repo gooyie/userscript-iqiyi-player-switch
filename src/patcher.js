@@ -61,7 +61,7 @@ class Patcher {
                 }
             };
 
-            exports.prototype.previousFrame = function() {
+            exports.prototype.prevFrame = function() {
                 const video = this.video();
                 let seekTime = Math.max(0, Math.min(this.getDuration(), video.currentTime - 1 / this.getFPS()));
                 video.currentTime = seekTime;
@@ -133,7 +133,7 @@ class Patcher {
                 this._showTip('恢复播放速率');
             };
 
-            exports.prototype.hasPreVideo = function() {
+            exports.prototype.hasPrevVideo = function() {
                 return this._getVideoIndexInList(this._movieinfo.tvid) > 0 || this._getVideoIndexInList(this._movieinfo.oldTvid) > 0;
             };
 
@@ -146,8 +146,8 @@ class Patcher {
                 }
             };
 
-            exports.prototype.playPre = function() {
-                if (this.hasPreVideo()) {
+            exports.prototype.playPrev = function() {
+                if (this.hasPrevVideo()) {
                     this._showTip('播放上一集');
                     this.switchPreVideo();
                 } else {
@@ -247,7 +247,7 @@ class Patcher {
                     if (!event.ctrlKey && !event.shiftKey && !event.altKey) {
                         this.core.pause(true);
                         if (event.keyCode === 68) {
-                            this.core.previousFrame();
+                            this.core.prevFrame();
                         } else {
                             this.core.nextFrame();
                         }
@@ -261,7 +261,7 @@ class Patcher {
                         if (event.keyCode === 78) {
                             this.core.playNext();
                         } else {
-                            this.core.playPre();
+                            this.core.playPrev();
                         }
                     } else {
                         return;
