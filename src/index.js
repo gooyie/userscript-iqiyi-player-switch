@@ -2,6 +2,7 @@ import './polyfill';
 import Logger from './logger';
 import Cookies from './cookies';
 import Detector from './detector';
+import Hooker from './hooker';
 import Mocker from './mocker';
 import Patcher from './patcher';
 import { replaceFlash, adaptIframe } from './outsite';
@@ -53,12 +54,19 @@ registerMenu();
 let currType = GM_getValue('player_forcedType', PLAYER_TYPE.Html5VOD);
 if (currType === PLAYER_TYPE.Html5VOD) {
     if (Detector.isSupportHtml5()) {
-        forceHtml5();
-        Mocker.mock();
-        Patcher.patchShortcuts();
+        if (Detector.isOutsite()) {
+            replaceFlash();
+        } else {
+            if (location.search.includes('list')) {
+                Hooker.keepalive = true;
+                Logger.log('keepalive hooks');
+            }
+            forceHtml5();
+            Mocker.mock();
+            Patcher.patchShortcuts();
 
-        if (Detector.isInnerFrame()) adaptIframe();
-        if (Detector.isOutsite()) replaceFlash();
+            if (Detector.isInnerFrame()) adaptIframe();
+        }
     } else {
         alert('╮(╯▽╰)╭ 你的浏览器播放不了html5视频~~~~');
     }

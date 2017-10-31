@@ -33,7 +33,7 @@ class Hooker {
             for (const [pred, callbacks] of callbacksMap) {
                 if (!pred.apply(this, [exports])) continue;
                 callbacks.forEach(cb => cb(exports, args));
-                callbacksMap.delete(pred);
+                this.keepalive || callbacksMap.delete(pred);
                 !callbacksMap.size && (this._hookModuleCall = null);
                 break;
             }
@@ -198,5 +198,7 @@ class Hooker {
     }
 
 }
+
+Hooker.keepalive = false;
 
 export default Hooker;

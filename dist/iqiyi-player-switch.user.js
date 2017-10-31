@@ -4,7 +4,7 @@
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/dist/iqiyi-player-switch.user.js
-// @version      1.11.0
+// @version      1.11.1
 // @description  爱奇艺flash播放器与html5播放器随意切换，改善html5播放器播放体验。
 // @author       gooyie
 // @license      MIT License
@@ -503,70 +503,6 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Cookies = function () {
-    function Cookies() {
-        _classCallCheck(this, Cookies);
-    }
-
-    _createClass(Cookies, null, [{
-        key: 'get',
-        value: function get(key) {
-            var value = void 0;
-            if (new RegExp('^[^\\x00-\\x20\\x7f\\(\\)<>@,;:\\\\\\"\\[\\]\\?=\\{\\}\\/\\u0080-\\uffff]+$').test(key)) {
-                // eslint-disable-line no-control-regex
-                var re = new RegExp('(^| )' + key + '=([^;]*)(;|$)');
-                var rs = re.exec(document.cookie);
-                value = rs ? rs[2] : '';
-            }
-            return value ? decodeURIComponent(value) : '';
-        }
-    }, {
-        key: 'set',
-        value: function set(k, v) {
-            var o = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-
-            var n = o.expires;
-            if ('number' == typeof o.expires) {
-                n = new Date();
-                n.setTime(n.getTime() + o.expires);
-            }
-            var key = k;
-            var value = encodeURIComponent(v);
-            var path = o.path ? '; path=' + o.path : '';
-            var expires = n ? '; expires=' + n.toGMTString() : '';
-            var domain = o.domain ? '; domain=' + o.domain : '';
-            document.cookie = key + '=' + value + path + expires + domain;
-        }
-    }, {
-        key: 'remove',
-        value: function remove(k) {
-            var o = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-            o.expires = new Date(0);
-            this.set(k, '', o);
-        }
-    }]);
-
-    return Cookies;
-}();
-
-exports.default = Cookies;
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
@@ -639,7 +575,7 @@ var Hooker = function () {
                         callbacks.forEach(function (cb) {
                             return cb(exports, args);
                         });
-                        callbacksMap.delete(_pred);
+                        _this.keepalive || callbacksMap.delete(_pred);
                         !callbacksMap.size && (_this._hookModuleCall = null);
                         break;
                     }
@@ -855,7 +791,73 @@ var Hooker = function () {
     return Hooker;
 }();
 
+Hooker.keepalive = false;
+
 exports.default = Hooker;
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Cookies = function () {
+    function Cookies() {
+        _classCallCheck(this, Cookies);
+    }
+
+    _createClass(Cookies, null, [{
+        key: 'get',
+        value: function get(key) {
+            var value = void 0;
+            if (new RegExp('^[^\\x00-\\x20\\x7f\\(\\)<>@,;:\\\\\\"\\[\\]\\?=\\{\\}\\/\\u0080-\\uffff]+$').test(key)) {
+                // eslint-disable-line no-control-regex
+                var re = new RegExp('(^| )' + key + '=([^;]*)(;|$)');
+                var rs = re.exec(document.cookie);
+                value = rs ? rs[2] : '';
+            }
+            return value ? decodeURIComponent(value) : '';
+        }
+    }, {
+        key: 'set',
+        value: function set(k, v) {
+            var o = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+            var n = o.expires;
+            if ('number' == typeof o.expires) {
+                n = new Date();
+                n.setTime(n.getTime() + o.expires);
+            }
+            var key = k;
+            var value = encodeURIComponent(v);
+            var path = o.path ? '; path=' + o.path : '';
+            var expires = n ? '; expires=' + n.toGMTString() : '';
+            var domain = o.domain ? '; domain=' + o.domain : '';
+            document.cookie = key + '=' + value + path + expires + domain;
+        }
+    }, {
+        key: 'remove',
+        value: function remove(k) {
+            var o = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+            o.expires = new Date(0);
+            this.set(k, '', o);
+        }
+    }]);
+
+    return Cookies;
+}();
+
+exports.default = Cookies;
 
 /***/ }),
 /* 6 */
@@ -1109,7 +1111,7 @@ var _logger = __webpack_require__(1);
 
 var _logger2 = _interopRequireDefault(_logger);
 
-var _cookies = __webpack_require__(4);
+var _cookies = __webpack_require__(5);
 
 var _cookies2 = _interopRequireDefault(_cookies);
 
@@ -1214,13 +1216,17 @@ var _logger = __webpack_require__(1);
 
 var _logger2 = _interopRequireDefault(_logger);
 
-var _cookies = __webpack_require__(4);
+var _cookies = __webpack_require__(5);
 
 var _cookies2 = _interopRequireDefault(_cookies);
 
 var _detector = __webpack_require__(2);
 
 var _detector2 = _interopRequireDefault(_detector);
+
+var _hooker = __webpack_require__(4);
+
+var _hooker2 = _interopRequireDefault(_hooker);
 
 var _mocker = __webpack_require__(27);
 
@@ -1288,12 +1294,19 @@ registerMenu();
 var currType = GM_getValue('player_forcedType', PLAYER_TYPE.Html5VOD);
 if (currType === PLAYER_TYPE.Html5VOD) {
     if (_detector2.default.isSupportHtml5()) {
-        forceHtml5();
-        _mocker2.default.mock();
-        _patcher2.default.patchShortcuts();
+        if (_detector2.default.isOutsite()) {
+            (0, _outsite.replaceFlash)();
+        } else {
+            if (location.search.includes('list')) {
+                _hooker2.default.keepalive = true;
+                _logger2.default.log('keepalive hooks');
+            }
+            forceHtml5();
+            _mocker2.default.mock();
+            _patcher2.default.patchShortcuts();
 
-        if (_detector2.default.isInnerFrame()) (0, _outsite.adaptIframe)();
-        if (_detector2.default.isOutsite()) (0, _outsite.replaceFlash)();
+            if (_detector2.default.isInnerFrame()) (0, _outsite.adaptIframe)();
+        }
     } else {
         alert('╮(╯▽╰)╭ 你的浏览器播放不了html5视频~~~~');
     }
@@ -5639,11 +5652,11 @@ var _detector = __webpack_require__(2);
 
 var _detector2 = _interopRequireDefault(_detector);
 
-var _cookies = __webpack_require__(4);
+var _cookies = __webpack_require__(5);
 
 var _cookies2 = _interopRequireDefault(_cookies);
 
-var _hooker = __webpack_require__(5);
+var _hooker = __webpack_require__(4);
 
 var _hooker2 = _interopRequireDefault(_hooker);
 
@@ -6075,7 +6088,7 @@ var _detector = __webpack_require__(2);
 
 var _detector2 = _interopRequireDefault(_detector);
 
-var _hooker = __webpack_require__(5);
+var _hooker = __webpack_require__(4);
 
 var _hooker2 = _interopRequireDefault(_hooker);
 
@@ -6155,7 +6168,7 @@ var Patcher = function () {
                     }
                 };
 
-                exports.prototype.previousFrame = function () {
+                exports.prototype.prevFrame = function () {
                     var video = this.video();
                     var seekTime = Math.max(0, Math.min(this.getDuration(), video.currentTime - 1 / this.getFPS()));
                     video.currentTime = seekTime;
@@ -6229,7 +6242,7 @@ var Patcher = function () {
                     this._showTip('恢复播放速率');
                 };
 
-                exports.prototype.hasPreVideo = function () {
+                exports.prototype.hasPrevVideo = function () {
                     return this._getVideoIndexInList(this._movieinfo.tvid) > 0 || this._getVideoIndexInList(this._movieinfo.oldTvid) > 0;
                 };
 
@@ -6242,8 +6255,8 @@ var Patcher = function () {
                     }
                 };
 
-                exports.prototype.playPre = function () {
-                    if (this.hasPreVideo()) {
+                exports.prototype.playPrev = function () {
+                    if (this.hasPrevVideo()) {
                         this._showTip('播放上一集');
                         this.switchPreVideo();
                     } else {
@@ -6353,7 +6366,7 @@ var Patcher = function () {
                             if (!event.ctrlKey && !event.shiftKey && !event.altKey) {
                                 this.core.pause(true);
                                 if (event.keyCode === 68) {
-                                    this.core.previousFrame();
+                                    this.core.prevFrame();
                                 } else {
                                     this.core.nextFrame();
                                 }
@@ -6368,7 +6381,7 @@ var Patcher = function () {
                                 if (event.keyCode === 78) {
                                     this.core.playNext();
                                 } else {
-                                    this.core.playPre();
+                                    this.core.playPrev();
                                 }
                             } else {
                                 return;
@@ -6485,7 +6498,7 @@ var _logger = __webpack_require__(1);
 
 var _logger2 = _interopRequireDefault(_logger);
 
-var _hooker = __webpack_require__(5);
+var _hooker = __webpack_require__(4);
 
 var _hooker2 = _interopRequireDefault(_hooker);
 

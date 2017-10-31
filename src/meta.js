@@ -4,7 +4,7 @@
 // @homepageURL  https://github.com/gooyie/userscript-iqiyi-player-switch
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/dist/iqiyi-player-switch.user.js
-// @version      1.11.0
+// @version      1.11.1
 // @description  爱奇艺flash播放器与html5播放器随意切换，改善html5播放器播放体验。
 // @author       gooyie
 // @license      MIT License
