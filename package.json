@@ -7,13 +7,11 @@
     "lint": "eslint src",
     "fix": "eslint src --fix",
     "clean": "node scripts/clean",
-    "concat": "node scripts/concat",
     "prewatch": "npm run clean",
     "watch": "webpack --watch -d",
     "dev": "npm run watch",
     "prebuild": "npm run clean",
     "build": "webpack --define process.env.NODE_ENV='production'",
-    "postbuild": "npm run concat",
     "precommit": "npm run lint"
   },
   "repository": {
@@ -32,7 +30,7 @@
   "bugs": {
     "url": "https://github.com/gooyie/userscript-iqiyi-player-switch/issues"
   },
-  "homepage": "https://github.com/gooyie/userscript-iqiyi-player-switch#readme",
+  "homepage": "https://github.com/gooyie/userscript-iqiyi-player-switch",
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-eslint": "^7.2.3",

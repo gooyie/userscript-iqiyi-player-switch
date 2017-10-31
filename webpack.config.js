@@ -1,6 +1,8 @@
 const webpack = require('webpack');
 const path = require('path');
 
+const pkg = require('./package');
+const meta = require('./src/meta');
 const srcPath = path.resolve(__dirname, 'src');
 const distPath = path.resolve(__dirname, 'dist');
 
@@ -12,7 +14,7 @@ module.exports = [
         },
         output: {
             path: distPath,
-            filename: './bundle.js'
+            filename: `./${pkg.name}.user.js`
         },
         module: {
             rules: [
@@ -34,7 +36,12 @@ module.exports = [
             ]
         },
         plugins: [
-            new webpack.optimize.ModuleConcatenationPlugin()
+            new webpack.optimize.ModuleConcatenationPlugin(),
+            new webpack.BannerPlugin({
+                banner: meta,
+                raw: true,
+                entryOnly: true,
+            }),
         ]
     }
 ];
