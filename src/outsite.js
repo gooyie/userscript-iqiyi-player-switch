@@ -9,7 +9,7 @@ async function embedSrc(targetNode, {tvid, vid}) {
 
     try {
         let url = await getVideoUrl(tvid, vid);
-        Logger.log('source url: %s', url);
+        Logger.info('source url: %s', url);
         targetNode.innerHTML = `<iframe id="innerFrame" src="${url}" frameborder="0" allowfullscreen="true" width="100%" height="100%"></iframe>`;
     } catch (err) {
         targetNode.innerHTML = `<div class="${GM_info.script.name} error"><p>获取视频源出错！</p><p>${err.message}</p></div>`;
@@ -25,24 +25,24 @@ function replaceFlash() {
 
             for (let node of record.addedNodes) {
                 if (node.nodeName !== 'OBJECT' && node.nodeName !== 'EMBED') continue;
-                Logger.log('finded node', node);
+                Logger.info('finded node', node);
 
                 let text = node.outerHTML;
                 let vid = findVid(text);
                 let tvid = findTvid(text);
 
                 if (tvid && vid) {
-                    Logger.log('finded tvid: %s, vid: %s', tvid, vid);
+                    Logger.info('finded tvid: %s, vid: %s', tvid, vid);
                     embedSrc(node.parentNode, {tvid, vid});
                     self.disconnect();
-                    Logger.log('stoped observation');
+                    Logger.info('stoped observation');
                 }
             }
         }
     });
 
     observer.observe(document.body || document.documentElement, {subtree: true, childList: true});
-    Logger.log('started observation');
+    Logger.info('started observation');
 }
 
 function adaptIframe() {

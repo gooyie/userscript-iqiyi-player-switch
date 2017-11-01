@@ -1,7 +1,6 @@
 import Logger from './logger';
 
 class Hooker {
-
     static _hookCall(cb) {
         const call = Function.prototype.call;
         Function.prototype.call = function(...args) {
@@ -10,7 +9,7 @@ class Hooker {
                 if (args && cb(args)) {
                     Function.prototype.call = call;
                     cb = () => {};
-                    Logger.log('restored call');
+                    Logger.info('restored call');
                 }
             } catch (err) {
                 Logger.error(err.stack);
@@ -197,6 +196,21 @@ class Hooker {
         });
     }
 
+    static _isUserModuleCall(exports) {
+        return exports.__proto__ && exports.__proto__.hasOwnProperty('isVip');
+    }
+
+    static hookUser(cb) {
+        this._hookModuleCall(cb, this._isUserModuleCall);
+    }
+
+    static _isShowRequestModuleCall(exports) {
+        return 'function' === typeof exports && exports.compressRequestKey && exports.prototype.hasOwnProperty('request');
+    }
+
+    static hookShowRequest(cb) {
+        this._hookModuleCall(cb, this._isShowRequestModuleCall);
+    }
 }
 
 Hooker.keepalive = false;

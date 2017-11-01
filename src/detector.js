@@ -1,6 +1,5 @@
 
 class Detector {
-
     static isSupportHtml5() {
         let v = document.createElement('video');
         return !!(
@@ -51,12 +50,6 @@ class Detector {
         const plugins = unsafeWindow.navigator.plugins;
         return !!(plugins['Shockwave Flash'] && plugins['Shockwave Flash'].description);
     }
-
-    static isFullScreen() {
-        return !!(document.fullscreen || document.webkitIsFullScreen || document.mozFullScreen ||
-            document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement);
-    }
-
 }
 
 export default Detector;

@@ -14,7 +14,7 @@ if (Detector.isFirefox()) {
 
     unsafeWindow.fetch = (url, opts) => {
         if (isVideoReq(url)) {
-            Logger.log(`fetching stream ${url}`);
+            Logger.info(`fetching stream ${url}`);
             return fetchStream(url, opts); // xhr with moz-chunked-arraybuffer
         } else {
             return fetch(url, opts);

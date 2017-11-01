@@ -1,6 +1,5 @@
 
 class Cookies {
-
     static get(key) {
         let value;
         if (new RegExp('^[^\\x00-\\x20\\x7f\\(\\)<>@,;:\\\\\\"\\[\\]\\?=\\{\\}\\/\\u0080-\\uffff]+$').test(key)) { // eslint-disable-line no-control-regex
@@ -29,7 +28,6 @@ class Cookies {
         o.expires = new Date(0);
         this.set(k, '', o);
     }
-
 }
 
 export default Cookies;

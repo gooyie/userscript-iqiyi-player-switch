@@ -1,6 +1,5 @@
 /* eslint-disable no-console */
 class Logger {
-
     constructor(tag) {
         this._tag = tag;
     }
@@ -10,12 +9,12 @@ class Logger {
     }
 
     log(...args) {
-        console.log('%c' + this.tag + '%c' + args.shift(),
-            'color: green; font-weight: bolder', 'color: blue', ...args);
+        console.log(this.tag + args.shift(), ...args);
     }
 
     info(...args) {
-        console.info(this.tag + args.shift(), ...args);
+        console.log('%c' + this.tag + '%c' + args.shift(),
+            'color: green; font-weight: bolder', 'color: blue', ...args);
     }
 
     debug(...args) {
@@ -29,7 +28,6 @@ class Logger {
     error(...args) {
         console.error(this.tag + args.shift(), ...args);
     }
-
 }
 
 export default new Logger(`[${GM_info.script.name}]`);
