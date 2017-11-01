@@ -211,6 +211,14 @@ class Hooker {
     static hookShowRequest(cb) {
         this._hookModuleCall(cb, this._isShowRequestModuleCall);
     }
+
+    static _isDefaultSkinModuleCall(exports) {
+        return 'function' === typeof exports && exports.prototype.hasOwnProperty('_initDBClicks');
+    }
+
+    static hookDefaultSkin(cb) {
+        this._hookModuleCall(cb, this._isDefaultSkinModuleCall);
+    }
 }
 
 Hooker.keepalive = false;

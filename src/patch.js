@@ -340,6 +340,10 @@ class KeyShortcutsPatch extends Patch {
                         return;
                     }
                     break;
+                case 27: // ESC
+                    if (!event.ctrlKey && !event.shiftKey && !event.altKey)
+                        webFullscreen.isWebFullScreen() && webFullscreen.exit();
+                    return;
                 default:
                     if (keyCode >= 48 && keyCode <= 57) { // 0 ~ 9
                         if (!ctrlKey && !shiftKey && !altKey) {
@@ -371,13 +375,38 @@ class MouseShortcutsPatch extends Patch {
     }
 
     _apply() {
-        Hooker.hookPluginControlsInit((that) => {
-            document.addEventListener('wheel', (event) => {
-                if (!fullscreen.isFullScreen()) return;
-
-                const delta = event.wheelDelta || event.detail || (event.deltaY && -event.deltaY);
-                that.core.adjustVolume(delta > 0 ? 0.05 : -0.05);
-            });
+        Hooker.hookDefaultSkin((exports) => {
+            exports.prototype._initDBClicks = function() {
+                let timer, core = this.core;
+                this.videoWrapper.find('video').on('click', () => {
+                    if (timer) {
+                        clearTimeout(timer);
+                        timer = null;
+                        return;
+                    }
+                    timer = setTimeout(() => {
+                        if (core.isPaused()) {
+                            core.play(true);
+                        } else {
+                            core.pause(true);
+                        }
+                        timer = null;
+                    }, 200);
+                }).on('dblclick', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (event.ctrlKey) {
+                        webFullscreen.toggle();
+                    } else {
+                        fullscreen.toggle();
+                    }
+                }).on('wheel', (event) => {
+                    if (fullscreen.isFullScreen() || webFullscreen.isWebFullScreen()) {
+                        const delta = event.wheelDelta || event.detail || (event.deltaY && -event.deltaY);
+                        core.adjustVolume(delta > 0 ? 0.05 : -0.05);
+                    }
+                });
+            };
 
             Logger.info('鼠标快捷键已添加');
         });
