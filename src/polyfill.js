@@ -15,7 +15,12 @@ if (Detector.isFirefox()) {
     unsafeWindow.fetch = (url, opts) => {
         if (isVideoReq(url)) {
             Logger.info(`fetching stream ${url}`);
-            return fetchStream(url, opts); // xhr with moz-chunked-arraybuffer
+            return fetchStream(url, opts).then((res) => {
+                if (!res.ok) { // 出错
+                    throw new TypeError('Failed to fetch'); // 则切换到 WebSocket loader
+                }
+                return res;
+            });
         } else {
             return fetch(url, opts);
         }
