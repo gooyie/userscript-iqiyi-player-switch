@@ -87,6 +87,11 @@ class CorePatch extends Patch {
     }
 
     _prepare() {
+        this._initShowTip();
+        this._initPlaybackRate();
+    }
+
+    _initShowTip() {
         Hooker.hookPluginControlsInit((that) => {
             that.core.on('showtip', (event) => {
                 that.setcontroltip.apply(that, [{str: event.data, x: that._process.offset().left, y: 3, cut: true, timeout: true}]);
@@ -97,6 +102,16 @@ class CorePatch extends Patch {
                 }
             });
         });
+    }
+
+    _initPlaybackRate() {
+        Hooker.hookPluginControls((exports) => {
+            exports.prototype.initPlaybackRate = function() {
+                const value = parseFloat(localStorage.getItem('QiyiPlayerPlaybackRate'));
+                this.core._playbackRate = isNaN(value) ? 1 : value;
+            };
+        });
+        Hooker.hookPluginControlsInit(that => that.initPlaybackRate());
     }
 
     _apply() {
@@ -176,15 +191,17 @@ class CorePatch extends Patch {
 
             proto.adjustPlaybackRate = function(value) {
                 const video = this.video();
-                const playbackRate = Math.max(0.2, Math.min(5, video.playbackRate + value));
-                video.playbackRate = playbackRate;
-                this._showTip(`播放速率：${playbackRate.toFixed(1).replace(/\.0+$/, '')}`);
+                const rate = Math.max(0.2, Math.min(5, parseFloat((video.playbackRate + value).toFixed(1))));
+                this._playbackRate = video.playbackRate = rate;
+                localStorage.setItem('QiyiPlayerPlaybackRate', rate);
+                this._showTip(`播放速率：${rate}`);
             };
 
-            proto.resetPlaybackRate = function() {
+            proto.turnPlaybackRate = function() {
                 const video = this.video();
-                video.playbackRate = 1;
-                this._showTip('恢复播放速率');
+                const rate = video.playbackRate !== 1 ? 1 : this._playbackRate;
+                video.playbackRate = rate;
+                this._showTip(`播放速率：${rate}`);
             };
 
             proto.hasPrevVideo = function() {
@@ -310,7 +327,7 @@ class KeyShortcutsPatch extends Patch {
                     break;
                 case 90: // Z
                     if (!ctrlKey && !shiftKey && !altKey) {
-                        core.resetPlaybackRate();
+                        core.turnPlaybackRate();
                     } else {
                         return;
                     }
