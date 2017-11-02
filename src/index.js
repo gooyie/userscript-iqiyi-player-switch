@@ -12,6 +12,7 @@ import {
     checkPluginPatch,
     keyShortcutsPatch,
     mouseShortcutsPatch,
+    useWebSocketLoaderPatch,
 } from './patch';
 
 const PLAYER_TYPE = {
@@ -90,6 +91,7 @@ if (currType === PLAYER_TYPE.Html5VOD) {
             checkPluginPatch.install();
             keyShortcutsPatch.install();
             mouseShortcutsPatch.install();
+            useWebSocketLoaderPatch.install();
 
             if (Detector.isInnerFrame()) adaptIframe();
         }

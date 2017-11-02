@@ -219,6 +219,14 @@ class Hooker {
     static hookDefaultSkin(cb) {
         this._hookModuleCall(cb, this._isDefaultSkinModuleCall);
     }
+
+    static _isConfigModuleCall(exports) {
+        return exports.loadType && exports.dispatchCfg;
+    }
+
+    static hookConfig(cb) {
+        this._hookModuleCall(cb, this._isConfigModuleCall);
+    }
 }
 
 Hooker.keepalive = false;

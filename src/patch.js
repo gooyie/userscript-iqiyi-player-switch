@@ -413,9 +413,23 @@ class MouseShortcutsPatch extends Patch {
     }
 }
 
+class UseWebSocketLoaderPatch extends Patch {
+    constructor() {
+        super();
+    }
+
+    _apply() {
+        Hooker.hookConfig((exports) => {
+            exports.loadType = 'websocket'; // 'fetch'(default) or 'websocket'
+            Logger.info('默认使用WebSocket loader');
+        });
+    }
+}
+
 export const vipPatch = new VipPatch();
 export const adsPatch = new AdsPatch();
 export const watermarksPatch = new WatermarksPatch();
 export const checkPluginPatch = new CheckPluginPatch();
 export const keyShortcutsPatch = new KeyShortcutsPatch();
 export const mouseShortcutsPatch = new MouseShortcutsPatch();
+export const useWebSocketLoaderPatch = new UseWebSocketLoaderPatch();
