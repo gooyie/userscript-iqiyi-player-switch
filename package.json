@@ -46,7 +46,6 @@
   },
   "dependencies": {
     "fetch-readablestream": "git+https://github.com/gooyie/fetch-readablestream.git#dev",
-    "web-streams-polyfill": "^1.3.2",
-    "webrtc-adapter": "^4.1.0"
+    "web-streams-polyfill": "^1.3.2"
   }
 }

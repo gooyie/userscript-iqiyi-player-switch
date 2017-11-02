@@ -1,4 +1,3 @@
-import 'webrtc-adapter';
 import 'web-streams-polyfill';
 import fetchStream from '../node_modules/fetch-readablestream/src';
 import Logger from './logger';
