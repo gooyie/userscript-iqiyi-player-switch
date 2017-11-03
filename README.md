@@ -11,12 +11,13 @@
 
 ## 脚本实现的功能
 * 在脚本管理器上添加菜单命令用于播放器切换（默认启用html5播放器）
-* 为`firefox`应用`polyfill`以支持`f4v`播放
+* firefox 播放`f4v`
 * 和谐广告
 * 和谐非内嵌水印
 * 解除会员清晰度限制
 * [外链html5播放](https://github.com/gooyie/userscript-iqiyi-player-switch/issues/7)（不完善）
 * 快捷键
+* 默认使用 WebSocket 加载视频
 
 ## 键盘快捷键
 快捷键仿照`PotPlayer`和`youtube`
@@ -63,8 +64,9 @@
 ![vm-switch](https://user-images.githubusercontent.com/25021141/27002466-b3b9407e-4e15-11e7-8c43-c1c7129bd899.png)
 
 ## 关于html5播放器清晰度
-  * html5 播放器播放 `f4v` 依赖于 `fetch + ReadableStream` 与 `WebRTC`，能否播放或正常播放取决于浏览器。
-  * `Chrome/57+` 播放 `f4v` 比较稳定，而内核版本较低的会出现播放出错、回跳。
-  * `Firefox` 仍未实现 `ReadableStream` ，只能通过使用 `Polyfill` 来支持播放 `f4v`。
-  * `Edge` 也可以播放 `f4v`，但是较低版本需使用 `WebRTC adapter` 且 `Build 15048` 之前的 `ReadableStream` 有[bug](https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/8196907/)，会出现播放中断。
-  * 不支持播放 `f4v` 的浏览器，则只能播放最高清晰度为高清的 `mp4` 或 `m3u8` 。
+
+  html5 播放器播放`f4v`用了`fetch + ReadableStream`、`WebSocket`、`WebRTC`来加载视频流，能否播放或正常播放取决于浏览器。
+  爱奇艺在 Chrome >=43 默认使用了html5播放器，所以Chrome >=43应该都能正常播放吧。
+  爱奇艺并没有兼容并支持 Firefox 加载`f4v`视频流播放，所以脚本采取了一些措施以支持。Firefox 仍未实现`ReadableStream`，仅用`WebSocket`好像也可以。不过，WebSocket Loader出错时会自动切换到fetch Loader，反之亦然。为确保稳定可靠地播放，使用了 `fetch + ReadableStream` [Polyfill](https://github.com/jonnyreeves/fetch-readablestream)。只测试了 Firefox 56.0 (64 位) 和 57.0b13 (64 位)，可正常播放。
+  爱奇艺通过userAgent识别浏览器，所以Edge会被当成Chrome在userAgent中的Chrome版本号 >=43 的情况下默认使用html5播放器。爱奇艺也没有对Edge作兼容处理，Edge 易升之前可能需要`WebRTC adapter`才会播放`f4v`，而易升后已不再需要。
+  不满足`f4v`播放条件的浏览器，则只能播放最高清晰度为高清的 `mp4` 或 `m3u8` 。
