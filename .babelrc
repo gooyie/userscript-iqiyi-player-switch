@@ -1,7 +1,12 @@
 {
-  "presets": ["es2015"],
+  "presets": [
+    ["env", {
+      "targets": {
+        "browsers": ["chrome >= 43", "firefox >= 45", "edge >= 15"]
+      }
+    }]
+  ],
   "plugins": [
-    "transform-async-to-generator",
     [
       "transform-runtime",
       {
