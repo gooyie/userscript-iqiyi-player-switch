@@ -1,6 +1,3 @@
-// import Logger from './logger';
-// import Cookies from './cookies';
-// import md5 from 'blueimp-md5';
 
 class Faker {
     static fakeMacPlatform() {
