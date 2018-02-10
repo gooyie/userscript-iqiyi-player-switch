@@ -107,11 +107,53 @@ class CorePatch extends Patch {
     _initPlaybackRate() {
         Hooker.hookPluginControls((exports) => {
             exports.prototype.initPlaybackRate = function() {
-                const value = parseFloat(localStorage.getItem('QiyiPlayerPlaybackRate'));
-                this.core._playbackRate = isNaN(value) ? 1 : value;
+                const core = this.core;
+
+                let rate = parseFloat(localStorage.getItem('QiyiPlayerPlaybackRate'));
+                rate = isNaN(rate) ? 1 : rate;
+                core._backRate = rate;
+
+                if (core.getCurrStatus() === 'playing') {
+                    core.setPlaybackRate(rate);
+                } else {
+                    const onstatuschanged = (evt) => {
+                        if (evt.data.state === 'playing') {
+                            core.setPlaybackRate(rate);
+                            core.un('statusChanged', onstatuschanged);
+                        }
+                    };
+                    core.on('statusChanged', onstatuschanged);
+                }
+
+                const $ul = this.$playbackrateUl;
+                $ul.find(`[data-pbrate="${rate}"]`).addClass('selected');
+
+                const $items = $ul.find('li');
+                $items.on('click', function() {
+                    const rate = parseFloat(this.getAttribute('data-pbrate'));
+                    if (!this.classList.contains('selected')) {
+                        $items.removeClass('selected');
+                        this.classList.add('selected');
+                    }
+                    localStorage.setItem('QiyiPlayerPlaybackRate', rate);
+                    core._backRate = rate;
+                    core.setPlaybackRate(rate);
+                });
+
+                this.$playsettingicon.on('click', function() {
+                    const rate = core.getPlaybackRate();
+                    const $item = $ul.find(`[data-pbrate="${rate}"]`);
+                    if ($item.length === 1) {
+                        if (!$item.hasClass('selected')) {
+                            $items.removeClass('selected');
+                            $item.addClass('selected');
+                        }
+                    } else {
+                        $items.removeClass('selected');
+                    }
+                });
             };
         });
-        Hooker.hookPluginControlsInit(that => that.initPlaybackRate());
     }
 
     _apply() {
@@ -189,18 +231,30 @@ class CorePatch extends Patch {
                 this.fire({type: 'keyvolumechange'});
             };
 
+            proto.getPlaybackRate = function() { // iqiyi 的这个方法有bug，没把值返回！
+                return this._engine.getPlaybackRate();
+            };
+
             proto.adjustPlaybackRate = function(value) {
-                const video = this.video();
-                const rate = Math.max(0.2, Math.min(5, parseFloat((video.playbackRate + value).toFixed(1))));
-                this._playbackRate = video.playbackRate = rate;
+                const currRate = this.getPlaybackRate();
+                const rate = Math.max(0.2, Math.min(5, parseFloat((currRate + value).toFixed(1))));
+
                 localStorage.setItem('QiyiPlayerPlaybackRate', rate);
+                this.setPlaybackRate(rate);
                 this._showTip(`播放速率：${rate}`);
             };
 
             proto.turnPlaybackRate = function() {
-                const video = this.video();
-                const rate = video.playbackRate !== 1 ? 1 : this._playbackRate;
-                video.playbackRate = rate;
+                const currRate = this.getPlaybackRate();
+                let rate;
+                if (currRate !== 1) {
+                    this._backRate = currRate;
+                    rate = 1;
+                } else {
+                    rate = this._backRate;
+                }
+
+                this.setPlaybackRate(rate);
                 this._showTip(`播放速率：${rate}`);
             };
 
