@@ -25,14 +25,14 @@ function replaceFlash() {
 
             for (let node of record.addedNodes) {
                 if (node.nodeName !== 'OBJECT' && node.nodeName !== 'EMBED') continue;
-                Logger.info('finded node', node);
+                Logger.info('found node', node);
 
                 let text = node.outerHTML;
                 let vid = findVid(text);
                 let tvid = findTvid(text);
 
                 if (tvid && vid) {
-                    Logger.info('finded tvid: %s, vid: %s', tvid, vid);
+                    Logger.info('found tvid: %s, vid: %s', tvid, vid);
                     embedSrc(node.parentNode, {tvid, vid});
                     self.disconnect();
                     Logger.info('stoped observation');
