@@ -6,7 +6,7 @@
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/dist/iqiyi-player-switch.user.js
 // @description  爱奇艺flash播放器与html5播放器随意切换，改善html5播放器播放体验。
-// @version      1.12.0
+// @version      1.12.1
 // @compatible   chrome >= 43
 // @compatible   firefox >= 45
 // @compatible   edge >= 15
@@ -1811,14 +1811,14 @@ function replaceFlash() {
                         var node = _step2.value;
 
                         if (node.nodeName !== 'OBJECT' && node.nodeName !== 'EMBED') continue;
-                        _logger2.default.info('finded node', node);
+                        _logger2.default.info('found node', node);
 
                         var text = node.outerHTML;
                         var vid = (0, _utils.findVid)(text);
                         var tvid = (0, _utils.findTvid)(text);
 
                         if (tvid && vid) {
-                            _logger2.default.info('finded tvid: %s, vid: %s', tvid, vid);
+                            _logger2.default.info('found tvid: %s, vid: %s', tvid, vid);
                             embedSrc(node.parentNode, { tvid, vid });
                             self.disconnect();
                             _logger2.default.info('stoped observation');
@@ -2960,12 +2960,52 @@ var CorePatch = function (_Patch5) {
         value: function _initPlaybackRate() {
             _hooker2.default.hookPluginControls(function (exports) {
                 exports.prototype.initPlaybackRate = function () {
-                    var value = parseFloat(localStorage.getItem('QiyiPlayerPlaybackRate'));
-                    this.core._playbackRate = isNaN(value) ? 1 : value;
+                    var core = this.core;
+
+                    var rate = parseFloat(localStorage.getItem('QiyiPlayerPlaybackRate'));
+                    rate = isNaN(rate) ? 1 : rate;
+                    core._backRate = rate;
+
+                    if (core.getCurrStatus() === 'playing') {
+                        core.setPlaybackRate(rate);
+                    } else {
+                        var onstatuschanged = function onstatuschanged(evt) {
+                            if (evt.data.state === 'playing') {
+                                core.setPlaybackRate(rate);
+                                core.un('statusChanged', onstatuschanged);
+                            }
+                        };
+                        core.on('statusChanged', onstatuschanged);
+                    }
+
+                    var $ul = this.$playbackrateUl;
+                    $ul.find(`[data-pbrate="${rate}"]`).addClass('selected');
+
+                    var $items = $ul.find('li');
+                    $items.on('click', function () {
+                        var rate = parseFloat(this.getAttribute('data-pbrate'));
+                        if (!this.classList.contains('selected')) {
+                            $items.removeClass('selected');
+                            this.classList.add('selected');
+                        }
+                        localStorage.setItem('QiyiPlayerPlaybackRate', rate);
+                        core._backRate = rate;
+                        core.setPlaybackRate(rate);
+                    });
+
+                    this.$playsettingicon.on('click', function () {
+                        var rate = core.getPlaybackRate();
+                        var $item = $ul.find(`[data-pbrate="${rate}"]`);
+                        if ($item.length === 1) {
+                            if (!$item.hasClass('selected')) {
+                                $items.removeClass('selected');
+                                $item.addClass('selected');
+                            }
+                        } else {
+                            $items.removeClass('selected');
+                        }
+                    });
                 };
-            });
-            _hooker2.default.hookPluginControlsInit(function (that) {
-                return that.initPlaybackRate();
             });
         }
     }, {
@@ -3047,18 +3087,31 @@ var CorePatch = function (_Patch5) {
                     this.fire({ type: 'keyvolumechange' });
                 };
 
+                proto.getPlaybackRate = function () {
+                    // iqiyi 的这个方法有bug，没把值返回！
+                    return this._engine.getPlaybackRate();
+                };
+
                 proto.adjustPlaybackRate = function (value) {
-                    var video = this.video();
-                    var rate = Math.max(0.2, Math.min(5, parseFloat((video.playbackRate + value).toFixed(1))));
-                    this._playbackRate = video.playbackRate = rate;
+                    var currRate = this.getPlaybackRate();
+                    var rate = Math.max(0.2, Math.min(5, parseFloat((currRate + value).toFixed(1))));
+
                     localStorage.setItem('QiyiPlayerPlaybackRate', rate);
+                    this.setPlaybackRate(rate);
                     this._showTip(`播放速率：${rate}`);
                 };
 
                 proto.turnPlaybackRate = function () {
-                    var video = this.video();
-                    var rate = video.playbackRate !== 1 ? 1 : this._playbackRate;
-                    video.playbackRate = rate;
+                    var currRate = this.getPlaybackRate();
+                    var rate = void 0;
+                    if (currRate !== 1) {
+                        this._backRate = currRate;
+                        rate = 1;
+                    } else {
+                        rate = this._backRate;
+                    }
+
+                    this.setPlaybackRate(rate);
                     this._showTip(`播放速率：${rate}`);
                 };
 

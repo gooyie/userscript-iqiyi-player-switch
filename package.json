@@ -1,6 +1,6 @@
 {
   "name": "iqiyi-player-switch",
-  "version": "1.12.0",
+  "version": "1.12.1",
   "description": "爱奇艺flash播放器与html5播放器随意切换，改善html5播放器播放体验。",
   "main": "src/index.js",
   "scripts": {
