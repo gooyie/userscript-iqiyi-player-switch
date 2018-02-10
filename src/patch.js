@@ -111,7 +111,6 @@ class CorePatch extends Patch {
 
                 let rate = parseFloat(localStorage.getItem('QiyiPlayerPlaybackRate'));
                 rate = isNaN(rate) ? 1 : rate;
-                core._backRate = rate;
 
                 if (core.getCurrStatus() === 'playing') {
                     core.setPlaybackRate(rate);
@@ -136,7 +135,6 @@ class CorePatch extends Patch {
                         this.classList.add('selected');
                     }
                     localStorage.setItem('QiyiPlayerPlaybackRate', rate);
-                    core._backRate = rate;
                     core.setPlaybackRate(rate);
                 });
 
@@ -251,7 +249,7 @@ class CorePatch extends Patch {
                     this._backRate = currRate;
                     rate = 1;
                 } else {
-                    rate = this._backRate;
+                    rate = this._backRate || 1;
                 }
 
                 this.setPlaybackRate(rate);

@@ -6,7 +6,7 @@
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/dist/iqiyi-player-switch.user.js
 // @description  爱奇艺flash播放器与html5播放器随意切换，改善html5播放器播放体验。
-// @version      1.12.1
+// @version      1.12.2
 // @compatible   chrome >= 43
 // @compatible   firefox >= 45
 // @compatible   edge >= 15
@@ -2964,7 +2964,6 @@ var CorePatch = function (_Patch5) {
 
                     var rate = parseFloat(localStorage.getItem('QiyiPlayerPlaybackRate'));
                     rate = isNaN(rate) ? 1 : rate;
-                    core._backRate = rate;
 
                     if (core.getCurrStatus() === 'playing') {
                         core.setPlaybackRate(rate);
@@ -2989,7 +2988,6 @@ var CorePatch = function (_Patch5) {
                             this.classList.add('selected');
                         }
                         localStorage.setItem('QiyiPlayerPlaybackRate', rate);
-                        core._backRate = rate;
                         core.setPlaybackRate(rate);
                     });
 
@@ -3108,7 +3106,7 @@ var CorePatch = function (_Patch5) {
                         this._backRate = currRate;
                         rate = 1;
                     } else {
-                        rate = this._backRate;
+                        rate = this._backRate || 1;
                     }
 
                     this.setPlaybackRate(rate);
