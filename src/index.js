@@ -93,7 +93,9 @@ if (currType === PLAYER_TYPE.Html5VOD) {
             mouseShortcutsPatch.install();
             useWebSocketLoaderPatch.install();
 
-            if (Detector.isInnerFrame()) adaptIframe();
+            if (Detector.isInIFrame() && Detector.isOutsideLink()) {
+                adaptIframe();
+            }
         }
     } else {
         alert('╮(╯▽╰)╭ 你的浏览器播放不了html5视频~~~~');

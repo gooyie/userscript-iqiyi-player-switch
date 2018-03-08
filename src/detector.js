@@ -38,12 +38,16 @@ class Detector {
         return /edge/i.test(navigator.userAgent);
     }
 
-    static isInnerFrame() {
+    static isInIFrame() {
         return window.top !== window.self;
     }
 
     static isOutsite() {
         return !/\.iqiyi\.com$/.test(location.host);
+    }
+
+    static isOutsideLink() {
+        return location.hash === '#outsidelink';
     }
 
     static hasFlashPlugin() {

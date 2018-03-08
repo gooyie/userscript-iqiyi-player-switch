@@ -10,7 +10,7 @@ async function embedSrc(targetNode, {tvid, vid}) {
     try {
         let url = await getVideoUrl(tvid, vid);
         Logger.info('source url: %s', url);
-        targetNode.innerHTML = `<iframe id="innerFrame" src="${url}" frameborder="0" allowfullscreen="true" width="100%" height="100%"></iframe>`;
+        targetNode.innerHTML = `<iframe id="outsidelink" src="${url}#outsidelink" frameborder="0" allowfullscreen="true" width="100%" height="100%"></iframe>`;
     } catch (err) {
         targetNode.innerHTML = `<div class="${GM_info.script.name} error"><p>获取视频源出错！</p><p>${err.message}</p></div>`;
     }

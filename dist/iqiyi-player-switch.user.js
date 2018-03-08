@@ -6,7 +6,7 @@
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/dist/iqiyi-player-switch.user.js
 // @description  爱奇艺flash播放器与html5播放器随意切换，改善html5播放器播放体验。
-// @version      1.12.2
+// @version      1.12.3
 // @compatible   chrome >= 43
 // @compatible   firefox >= 45
 // @compatible   edge >= 15
@@ -610,14 +610,19 @@ var Detector = function () {
             );
         }
     }, {
-        key: 'isInnerFrame',
-        value: function isInnerFrame() {
+        key: 'isInIFrame',
+        value: function isInIFrame() {
             return window.top !== window.self;
         }
     }, {
         key: 'isOutsite',
         value: function isOutsite() {
             return !/\.iqiyi\.com$/.test(location.host);
+        }
+    }, {
+        key: 'isOutsideLink',
+        value: function isOutsideLink() {
+            return location.hash === '#outsidelink';
         }
     }, {
         key: 'hasFlashPlugin',
@@ -1055,7 +1060,9 @@ if (currType === PLAYER_TYPE.Html5VOD) {
             _patch.mouseShortcutsPatch.install();
             _patch.useWebSocketLoaderPatch.install();
 
-            if (_detector2.default.isInnerFrame()) (0, _outsite.adaptIframe)();
+            if (_detector2.default.isInIFrame() && _detector2.default.isOutsideLink()) {
+                (0, _outsite.adaptIframe)();
+            }
         }
     } else {
         alert('╮(╯▽╰)╭ 你的浏览器播放不了html5视频~~~~');
@@ -1743,7 +1750,7 @@ var embedSrc = function () {
                         url = _context.sent;
 
                         _logger2.default.info('source url: %s', url);
-                        targetNode.innerHTML = `<iframe id="innerFrame" src="${url}" frameborder="0" allowfullscreen="true" width="100%" height="100%"></iframe>`;
+                        targetNode.innerHTML = `<iframe id="outsidelink" src="${url}#outsidelink" frameborder="0" allowfullscreen="true" width="100%" height="100%"></iframe>`;
                         _context.next = 12;
                         break;
 
