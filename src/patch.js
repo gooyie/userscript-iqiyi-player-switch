@@ -488,8 +488,11 @@ class UseWebSocketLoaderPatch extends Patch {
     }
 
     _apply() {
-        Hooker.hookConfig((exports) => {
-            exports.loadType = 'websocket'; // 'fetch'(default) or 'websocket'
+        Hooker.hookFragment((exports) => {
+            Reflect.defineProperty(exports.prototype, 'tryWS', {
+                get: () => true,
+                set: () => {},
+            });
             Logger.info('默认使用WebSocket loader');
         });
     }
