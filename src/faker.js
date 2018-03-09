@@ -10,8 +10,8 @@ class Faker {
         Object.defineProperty(unsafeWindow.navigator, 'userAgent', {get: () => UA_SAFARY});
     }
 
-    static fakeChrome() {
-        const UA_CHROME = 'chrome';
+    static fakeChrome(ver = '') {
+        const UA_CHROME = `Chrome/${ver}`;
         Object.defineProperty(unsafeWindow.navigator, 'userAgent', {get: () => UA_CHROME});
     }
 

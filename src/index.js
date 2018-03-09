@@ -1,4 +1,3 @@
-import './polyfill';
 import Logger from './logger';
 import Cookies from './cookies';
 import Detector from './detector';
@@ -42,19 +41,6 @@ function switchTo(toType) {
     document.location.reload();
 }
 
-function autoFallback() {
-    if (Detector.isSupportVms()) { // vms f4v(flv)
-        if (!Detector.isChrome()) {
-            Faker.fakeChrome();
-        }
-    } else if (Detector.isSupportM3u8()) { // tmts m3u8
-        Faker.fakeMacPlatform();
-        Faker.fakeSafari();
-    } else {
-        // by default, tmts mp4 ...
-    }
-}
-
 function registerMenu() {
     const MENU_NAME = {
         HTML5: 'HTML5播放器',
@@ -83,7 +69,13 @@ if (currType === PLAYER_TYPE.Html5VOD) {
             }
 
             forceHtml5();
-            autoFallback();
+
+            if (Detector.isFirefox()) {
+                // Fake Chrome with version 42 to use the data engine to play videos higher than HD
+                // and to use the XHR loader because Firefox has not implemented ReadableStream
+                // to support the Fetch loader yet.
+                Faker.fakeChrome(42);
+            }
 
             adsPatch.install();
             watermarksPatch.install();
