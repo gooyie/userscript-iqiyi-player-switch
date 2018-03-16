@@ -9,7 +9,7 @@ class Hooker {
                 if (args && cb(args)) {
                     Function.prototype.call = call;
                     cb = () => {};
-                    Logger.info('restored call');
+                    Logger.info(`The native function call has been restored`);
                 }
             } catch (err) {
                 Logger.error(err.stack);

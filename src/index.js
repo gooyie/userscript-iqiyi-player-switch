@@ -1,14 +1,14 @@
 import Logger from './logger';
 import Cookies from './cookies';
 import Detector from './detector';
-import Hooker from './hooker';
 import Faker from './faker';
 import { replaceFlash, adaptIframe } from './outsite';
 import {
     vipPatch,
     adsPatch,
+    controlsPatch,
     watermarksPatch,
-    checkPluginPatch,
+    keepHookingPatch,
     keyShortcutsPatch,
     mouseShortcutsPatch,
     useWebSocketLoaderPatch,
@@ -20,24 +20,23 @@ const PLAYER_TYPE = {
 };
 
 function forceHtml5() {
-    Logger.info(`setting player_forcedType cookie as ${PLAYER_TYPE.Html5VOD}`);
     Cookies.set('player_forcedType', PLAYER_TYPE.Html5VOD, {domain: '.iqiyi.com'});
+    Logger.info(`The 'player_forcedType' cookie has been set as '${PLAYER_TYPE.Html5VOD}'`);
 }
 
 function forceFlash() {
-    Logger.info(`setting player_forcedType cookie as ${PLAYER_TYPE.FlashVOD}`);
     Cookies.set('player_forcedType', PLAYER_TYPE.FlashVOD, {domain: '.iqiyi.com'});
+    Logger.info(`The 'player_forcedType' cookie has been set as '${PLAYER_TYPE.FlashVOD}'`);
 }
 
 function clean() {
     Cookies.remove('player_forcedType', {domain: '.iqiyi.com'});
-    Logger.info(`removed cookies.`);
+    Logger.info(`Removed the 'player_forcedType' cookie`);
 }
 
-function switchTo(toType) {
-    Logger.info(`switching to ${toType} ...`);
-
-    GM_setValue('player_forcedType', toType);
+function switchTo(type) {
+    Logger.info(`Switching to ${type} ...`);
+    GM_setValue('player_forcedType', type);
     document.location.reload();
 }
 
@@ -48,9 +47,13 @@ function registerMenu() {
     };
 
     let currType = GM_getValue('player_forcedType', PLAYER_TYPE.Html5VOD); // 默认为Html5播放器，免去切换。
-    let [toType, name] = currType === PLAYER_TYPE.Html5VOD ? [PLAYER_TYPE.FlashVOD, MENU_NAME.FLASH] : [PLAYER_TYPE.Html5VOD, MENU_NAME.HTML5];
-    GM_registerMenuCommand(name, () => switchTo(toType), null);
-    Logger.info(`registered menu.`);
+    let [type, name] = currType === PLAYER_TYPE.Html5VOD ? [PLAYER_TYPE.FlashVOD, MENU_NAME.FLASH] : [PLAYER_TYPE.Html5VOD, MENU_NAME.HTML5];
+    GM_registerMenuCommand(name, () => switchTo(type), null);
+    Logger.info(`Registered the menu.`);
+}
+
+function mustKeepHooking() {
+    return location.search.includes('list'); // https://github.com/gooyie/userscript-iqiyi-player-switch/issues/15
 }
 
 //=============================================================================
@@ -63,24 +66,22 @@ if (currType === PLAYER_TYPE.Html5VOD) {
         if (Detector.isOutsite()) {
             replaceFlash();
         } else {
-            if (location.search.includes('list')) {
-                Hooker.keepalive = true;
-                Logger.info('keepalive hooks');
-            }
-
             forceHtml5();
 
             if (Detector.isFirefox()) {
-                // Fake Chrome with version 42 to use the data engine to play videos higher than HD
-                // and to use the XHR loader because Firefox has not implemented ReadableStream
-                // to support the Fetch loader yet.
+                // Fake Chrome with a version number less than 43
+                // to use the data engine to play videos better than HD and to use the XHR loader
+                // because Firefox has not yet implemented ReadableStream to support the Fetch loader.
                 Faker.fakeChrome(42);
             }
 
+            if (mustKeepHooking()) {
+                keepHookingPatch.install();
+            }
             adsPatch.install();
+            controlsPatch.install();
             watermarksPatch.install();
             vipPatch.install();
-            checkPluginPatch.install();
             keyShortcutsPatch.install();
             mouseShortcutsPatch.install();
             useWebSocketLoaderPatch.install();

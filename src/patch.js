@@ -32,7 +32,7 @@ class VipPatch extends Patch {
             const proto = exports.__proto__;
             proto.isVipSync = () => true;
             proto.isVip = (cb) => setTimeout(cb, 0, true);
-            Logger.info('vip 补丁已安装');
+            Logger.info('The vip patch has been installed');
         });
     }
 }
@@ -50,7 +50,7 @@ class AdsPatch extends Patch {
         Hooker.hookShowRequest((exports) => {
             const proto = exports.prototype;
             proto.request = (cb) => setTimeout(cb, 0, this._fakeAdsData());
-            Logger.info('和谐广告补丁已安装');
+            Logger.info('The ads patch has been installed');
         });
     }
 }
@@ -63,20 +63,20 @@ class WatermarksPatch extends Patch {
     _apply() {
         Hooker.hookLogo((exports) => {
             exports.prototype.showLogo = () => {};
-            Logger.info('和谐水印补丁已安装');
+            Logger.info('The watermarks patch has been installed');
         });
     }
 }
 
-class CheckPluginPatch extends Patch {
+class ControlsPatch extends Patch { // Prevent the player controls were disabled.
     constructor() {
         super();
     }
 
     _apply() {
         Hooker.hookSkinBase((exports) => {
-            exports.prototype._checkPlugin = () => {};
-            Logger.info('阻止插件检测补丁已安装');
+            exports.prototype._checkPlugin = () => {}; // This function disables the player controls when playing ads and enables when done.
+            Logger.info('The controls patch has been installed');
         });
     }
 }
@@ -278,7 +278,7 @@ class CorePatch extends Patch {
                 }
             };
 
-            Logger.info('core 补丁已安装');
+            Logger.info('The core patch has been installed');
         });
     }
 }
@@ -429,7 +429,7 @@ class KeyShortcutsPatch extends Patch {
                 event.stopPropagation();
             };
 
-            Logger.info('键盘快捷键已添加');
+            Logger.info('The keyboard shortcuts patch has been installed');
         });
     }
 }
@@ -477,7 +477,7 @@ class MouseShortcutsPatch extends Patch {
                 });
             };
 
-            Logger.info('鼠标快捷键已添加');
+            Logger.info('The mouse shortcuts patch has been installed');
         });
     }
 }
@@ -493,15 +493,26 @@ class UseWebSocketLoaderPatch extends Patch {
                 get: () => true,
                 set: () => {},
             });
-            Logger.info('默认使用WebSocket loader');
+            Logger.info('The WebSocket loader patch has been installed');
         });
+    }
+
+class KeepHookingPatch extends Patch {
+    constructor() {
+        super();
+    }
+
+    _apply() {
+        Hooker.keepalive = true;
+        Logger.info('The keep hooking patch has been installed');
     }
 }
 
 export const vipPatch = new VipPatch();
 export const adsPatch = new AdsPatch();
+export const controlsPatch = new ControlsPatch();
 export const watermarksPatch = new WatermarksPatch();
-export const checkPluginPatch = new CheckPluginPatch();
+export const keepHookingPatch = new KeepHookingPatch();
 export const keyShortcutsPatch = new KeyShortcutsPatch();
 export const mouseShortcutsPatch = new MouseShortcutsPatch();
 export const useWebSocketLoaderPatch = new UseWebSocketLoaderPatch();
