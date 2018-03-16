@@ -6,7 +6,7 @@
 // @supportURL   https://github.com/gooyie/userscript-iqiyi-player-switch/issues
 // @updateURL    https://raw.githubusercontent.com/gooyie/userscript-iqiyi-player-switch/master/dist/iqiyi-player-switch.user.js
 // @description  爱奇艺flash播放器与html5播放器随意切换，改善html5播放器播放体验。
-// @version      1.13.0
+// @version      1.14.0
 // @compatible   chrome >= 43
 // @compatible   firefox >= 45
 // @compatible   edge >= 15
@@ -135,7 +135,7 @@ var Hooker = function () {
                     if (args && cb(args)) {
                         Function.prototype.call = call;
                         cb = function cb() {};
-                        _logger2.default.info('restored call');
+                        _logger2.default.info(`The native function call has been restored`);
                     }
                 } catch (err) {
                     _logger2.default.error(err.stack);
@@ -724,10 +724,6 @@ var _detector = __webpack_require__(2);
 
 var _detector2 = _interopRequireDefault(_detector);
 
-var _hooker = __webpack_require__(0);
-
-var _hooker2 = _interopRequireDefault(_hooker);
-
 var _faker = __webpack_require__(3);
 
 var _faker2 = _interopRequireDefault(_faker);
@@ -744,24 +740,23 @@ var PLAYER_TYPE = {
 };
 
 function forceHtml5() {
-    _logger2.default.info(`setting player_forcedType cookie as ${PLAYER_TYPE.Html5VOD}`);
     _cookies2.default.set('player_forcedType', PLAYER_TYPE.Html5VOD, { domain: '.iqiyi.com' });
+    _logger2.default.info(`The 'player_forcedType' cookie has been set as '${PLAYER_TYPE.Html5VOD}'`);
 }
 
 function forceFlash() {
-    _logger2.default.info(`setting player_forcedType cookie as ${PLAYER_TYPE.FlashVOD}`);
     _cookies2.default.set('player_forcedType', PLAYER_TYPE.FlashVOD, { domain: '.iqiyi.com' });
+    _logger2.default.info(`The 'player_forcedType' cookie has been set as '${PLAYER_TYPE.FlashVOD}'`);
 }
 
 function clean() {
     _cookies2.default.remove('player_forcedType', { domain: '.iqiyi.com' });
-    _logger2.default.info(`removed cookies.`);
+    _logger2.default.info(`Removed the 'player_forcedType' cookie`);
 }
 
-function switchTo(toType) {
-    _logger2.default.info(`switching to ${toType} ...`);
-
-    GM_setValue('player_forcedType', toType);
+function switchTo(type) {
+    _logger2.default.info(`Switching to ${type} ...`);
+    GM_setValue('player_forcedType', type);
     document.location.reload();
 }
 
@@ -775,13 +770,17 @@ function registerMenu() {
 
     var _ref = currType === PLAYER_TYPE.Html5VOD ? [PLAYER_TYPE.FlashVOD, MENU_NAME.FLASH] : [PLAYER_TYPE.Html5VOD, MENU_NAME.HTML5],
         _ref2 = _slicedToArray(_ref, 2),
-        toType = _ref2[0],
+        type = _ref2[0],
         name = _ref2[1];
 
     GM_registerMenuCommand(name, function () {
-        return switchTo(toType);
+        return switchTo(type);
     }, null);
-    _logger2.default.info(`registered menu.`);
+    _logger2.default.info(`Registered the menu.`);
+}
+
+function mustKeepHooking() {
+    return location.search.includes('list'); // https://github.com/gooyie/userscript-iqiyi-player-switch/issues/15
 }
 
 //=============================================================================
@@ -794,24 +793,22 @@ if (currType === PLAYER_TYPE.Html5VOD) {
         if (_detector2.default.isOutsite()) {
             (0, _outsite.replaceFlash)();
         } else {
-            if (location.search.includes('list')) {
-                _hooker2.default.keepalive = true;
-                _logger2.default.info('keepalive hooks');
-            }
-
             forceHtml5();
 
             if (_detector2.default.isFirefox()) {
-                // Fake Chrome with version 42 to use the data engine to play videos higher than HD
-                // and to use the XHR loader because Firefox has not implemented ReadableStream
-                // to support the Fetch loader yet.
+                // Fake Chrome with a version number less than 43
+                // to use the data engine to play videos better than HD and to use the XHR loader
+                // because Firefox has not yet implemented ReadableStream to support the Fetch loader.
                 _faker2.default.fakeChrome(42);
             }
 
+            if (mustKeepHooking()) {
+                _patch.keepHookingPatch.install();
+            }
             _patch.adsPatch.install();
+            _patch.controlsPatch.install();
             _patch.watermarksPatch.install();
             _patch.vipPatch.install();
-            _patch.checkPluginPatch.install();
             _patch.keyShortcutsPatch.install();
             _patch.mouseShortcutsPatch.install();
             _patch.useWebSocketLoaderPatch.install();
@@ -1956,7 +1953,7 @@ exports.findTvid = findTvid;
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.useWebSocketLoaderPatch = exports.mouseShortcutsPatch = exports.keyShortcutsPatch = exports.checkPluginPatch = exports.watermarksPatch = exports.adsPatch = exports.vipPatch = undefined;
+exports.useWebSocketLoaderPatch = exports.mouseShortcutsPatch = exports.keyShortcutsPatch = exports.keepHookingPatch = exports.watermarksPatch = exports.controlsPatch = exports.adsPatch = exports.vipPatch = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -2029,7 +2026,7 @@ var VipPatch = function (_Patch) {
                 proto.isVip = function (cb) {
                     return setTimeout(cb, 0, true);
                 };
-                _logger2.default.info('vip 补丁已安装');
+                _logger2.default.info('The vip patch has been installed');
             });
         }
     }]);
@@ -2061,7 +2058,7 @@ var AdsPatch = function (_Patch2) {
                 proto.request = function (cb) {
                     return setTimeout(cb, 0, _this3._fakeAdsData());
                 };
-                _logger2.default.info('和谐广告补丁已安装');
+                _logger2.default.info('The ads patch has been installed');
             });
         }
     }]);
@@ -2083,7 +2080,7 @@ var WatermarksPatch = function (_Patch3) {
         value: function _apply() {
             _hooker2.default.hookLogo(function (exports) {
                 exports.prototype.showLogo = function () {};
-                _logger2.default.info('和谐水印补丁已安装');
+                _logger2.default.info('The watermarks patch has been installed');
             });
         }
     }]);
@@ -2091,26 +2088,27 @@ var WatermarksPatch = function (_Patch3) {
     return WatermarksPatch;
 }(Patch);
 
-var CheckPluginPatch = function (_Patch4) {
-    _inherits(CheckPluginPatch, _Patch4);
+var ControlsPatch = function (_Patch4) {
+    _inherits(ControlsPatch, _Patch4);
 
-    function CheckPluginPatch() {
-        _classCallCheck(this, CheckPluginPatch);
+    // Prevent the player controls were disabled.
+    function ControlsPatch() {
+        _classCallCheck(this, ControlsPatch);
 
-        return _possibleConstructorReturn(this, (CheckPluginPatch.__proto__ || Object.getPrototypeOf(CheckPluginPatch)).call(this));
+        return _possibleConstructorReturn(this, (ControlsPatch.__proto__ || Object.getPrototypeOf(ControlsPatch)).call(this));
     }
 
-    _createClass(CheckPluginPatch, [{
+    _createClass(ControlsPatch, [{
         key: '_apply',
         value: function _apply() {
             _hooker2.default.hookSkinBase(function (exports) {
-                exports.prototype._checkPlugin = function () {};
-                _logger2.default.info('阻止插件检测补丁已安装');
+                exports.prototype._checkPlugin = function () {}; // This function disables the player controls when playing ads and enables when done.
+                _logger2.default.info('The controls patch has been installed');
             });
         }
     }]);
 
-    return CheckPluginPatch;
+    return ControlsPatch;
 }(Patch);
 
 var CorePatch = function (_Patch5) {
@@ -2322,7 +2320,7 @@ var CorePatch = function (_Patch5) {
                     }
                 };
 
-                _logger2.default.info('core 补丁已安装');
+                _logger2.default.info('The core patch has been installed');
             });
         }
     }]);
@@ -2498,7 +2496,7 @@ var KeyShortcutsPatch = function (_Patch6) {
                     event.stopPropagation();
                 };
 
-                _logger2.default.info('键盘快捷键已添加');
+                _logger2.default.info('The keyboard shortcuts patch has been installed');
             });
         }
     }]);
@@ -2557,7 +2555,7 @@ var MouseShortcutsPatch = function (_Patch7) {
                     });
                 };
 
-                _logger2.default.info('鼠标快捷键已添加');
+                _logger2.default.info('The mouse shortcuts patch has been installed');
             });
         }
     }]);
@@ -2571,20 +2569,65 @@ var UseWebSocketLoaderPatch = function (_Patch8) {
     function UseWebSocketLoaderPatch() {
         _classCallCheck(this, UseWebSocketLoaderPatch);
 
-        return _possibleConstructorReturn(this, (UseWebSocketLoaderPatch.__proto__ || Object.getPrototypeOf(UseWebSocketLoaderPatch)).call(this));
+        var _this9 = _possibleConstructorReturn(this, (UseWebSocketLoaderPatch.__proto__ || Object.getPrototypeOf(UseWebSocketLoaderPatch)).call(this));
+
+        _this9.tryWs = GM_getValue('tryWs', false);
+        return _this9;
     }
 
     _createClass(UseWebSocketLoaderPatch, [{
+        key: '_prepare',
+        value: function _prepare() {
+            this._addSetting();
+        }
+    }, {
         key: '_apply',
         value: function _apply() {
+            var _this10 = this;
+
+            var that = this;
             _hooker2.default.hookFragment(function (exports) {
                 Reflect.defineProperty(exports.prototype, 'tryWS', {
                     get: function get() {
-                        return true;
-                    },
-                    set: function set() {}
+                        return _this10._tryWs || that.tryWs;
+                    }, // Will use the WebSocket loader if the value of tryWs is true.
+                    set: function set(value) {
+                        return _this10._tryWs = value;
+                    } // The value of tryWs will be true if the Fetch loader fails.
                 });
-                _logger2.default.info('默认使用WebSocket loader');
+                _logger2.default.info('The WebSocket loader patch has been installed');
+            });
+        }
+    }, {
+        key: '_addSetting',
+        value: function _addSetting() {
+            var that = this;
+            _hooker2.default.hookPluginControls(function (exports) {
+                var initSetting = exports.prototype.initSetting;
+                exports.prototype.initSetting = function () {
+                    var _this11 = this;
+
+                    var div = document.createElement('div');
+                    div.innerHTML = `
+                    <div class="setPop_item" data-player-hook="usewebsocketloaderbox">
+                        <span class="setPop_switchTxt" data-player-hook="controls_usewebsocketloader">WebSocket</span>
+                        <div class="setPop_switch setPop_switch_close" data-player-hook="usewebsocketloader"></div>
+                    </div>`;
+                    var item = div.querySelector('.setPop_item');
+                    this.$playsettingbox.find('.video_setPop_top').append(item);
+                    this.$usewebsocketBtn = this.$playsettingbox.find('[data-player-hook="usewebsocketloader"]');
+
+                    if (that.tryWs) {
+                        this.$usewebsocketBtn.removeClass('setPop_switch_close');
+                    }
+                    this.$usewebsocketBtn.on('click', function () {
+                        _this11.$usewebsocketBtn.toggleClass('setPop_switch_close');
+                        that.tryWs = !that.tryWs;
+                        GM_setValue('tryWs', that.tryWs);
+                    });
+
+                    initSetting.apply(this);
+                };
             });
         }
     }]);
@@ -2592,10 +2635,31 @@ var UseWebSocketLoaderPatch = function (_Patch8) {
     return UseWebSocketLoaderPatch;
 }(Patch);
 
+var KeepHookingPatch = function (_Patch9) {
+    _inherits(KeepHookingPatch, _Patch9);
+
+    function KeepHookingPatch() {
+        _classCallCheck(this, KeepHookingPatch);
+
+        return _possibleConstructorReturn(this, (KeepHookingPatch.__proto__ || Object.getPrototypeOf(KeepHookingPatch)).call(this));
+    }
+
+    _createClass(KeepHookingPatch, [{
+        key: '_apply',
+        value: function _apply() {
+            _hooker2.default.keepalive = true;
+            _logger2.default.info('The keep hooking patch has been installed');
+        }
+    }]);
+
+    return KeepHookingPatch;
+}(Patch);
+
 var vipPatch = exports.vipPatch = new VipPatch();
 var adsPatch = exports.adsPatch = new AdsPatch();
+var controlsPatch = exports.controlsPatch = new ControlsPatch();
 var watermarksPatch = exports.watermarksPatch = new WatermarksPatch();
-var checkPluginPatch = exports.checkPluginPatch = new CheckPluginPatch();
+var keepHookingPatch = exports.keepHookingPatch = new KeepHookingPatch();
 var keyShortcutsPatch = exports.keyShortcutsPatch = new KeyShortcutsPatch();
 var mouseShortcutsPatch = exports.mouseShortcutsPatch = new MouseShortcutsPatch();
 var useWebSocketLoaderPatch = exports.useWebSocketLoaderPatch = new UseWebSocketLoaderPatch();
