@@ -485,17 +485,53 @@ class MouseShortcutsPatch extends Patch {
 class UseWebSocketLoaderPatch extends Patch {
     constructor() {
         super();
+        this.tryWs = GM_getValue('tryWs', false);
+    }
+
+    _prepare() {
+        this._addSetting();
     }
 
     _apply() {
+        const that = this;
         Hooker.hookFragment((exports) => {
             Reflect.defineProperty(exports.prototype, 'tryWS', {
-                get: () => true,
-                set: () => {},
+                get: () => this._tryWs || that.tryWs, // Will use the WebSocket loader if the value of tryWs is true.
+                set: (value) => this._tryWs = value, // The value of tryWs will be true if the Fetch loader fails.
             });
             Logger.info('The WebSocket loader patch has been installed');
         });
     }
+
+    _addSetting() {
+        const that = this;
+        Hooker.hookPluginControls((exports) => {
+            const initSetting = exports.prototype.initSetting;
+            exports.prototype.initSetting = function() {
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <div class="setPop_item" data-player-hook="usewebsocketloaderbox">
+                        <span class="setPop_switchTxt" data-player-hook="controls_usewebsocketloader">WebSocket</span>
+                        <div class="setPop_switch setPop_switch_close" data-player-hook="usewebsocketloader"></div>
+                    </div>`;
+                const item = div.querySelector('.setPop_item');
+                this.$playsettingbox.find('.video_setPop_top').append(item);
+                this.$usewebsocketBtn = this.$playsettingbox.find('[data-player-hook="usewebsocketloader"]');
+
+                if (that.tryWs) {
+                    this.$usewebsocketBtn.removeClass('setPop_switch_close');
+                }
+                this.$usewebsocketBtn.on('click', () => {
+                    this.$usewebsocketBtn.toggleClass('setPop_switch_close');
+                    that.tryWs = !that.tryWs;
+                    GM_setValue('tryWs', that.tryWs);
+                });
+
+                initSetting.apply(this);
+            };
+        });
+    }
+}
 
 class KeepHookingPatch extends Patch {
     constructor() {
