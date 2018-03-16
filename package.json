@@ -34,14 +34,14 @@
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-eslint": "^7.2.3",
-    "babel-loader": "^7.1.2",
+    "babel-loader": "^7.1.4",
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.6.1",
     "eslint": "^3.19.0",
     "eslint-loader": "^1.9.0",
     "fs-extra": "^3.0.1",
     "husky": "^0.13.4",
-    "webpack": "^3.8.1"
+    "webpack": "^3.11.0"
   },
   "dependencies": {}
 }
